@@ -1,0 +1,14 @@
+<div class="picker">
+  <div role="none" class="pi pi-angle-double-left clickable" (click)="moveCalBck()"></div>
+
+  <p-calendar
+    [readonlyInput]="true"
+    view="month"
+    dateFormat="MM yy"
+    inputStyleClass="p-calendar-input clickable"
+    [ngModel]="selectedDate()"
+    (ngModelChange)="selectedDate.set($event)"
+    (onSelect)="dateSelected.emit($event)" />
+
+  <div role="none" class="pi pi-angle-double-right clickable" (click)="moveCalFwd()"></div>
+</div>
