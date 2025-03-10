@@ -5,11 +5,10 @@ import { TabNavItem } from '../ui/tab-nav/tab-nav.interface';
 import { CategoryItemsComponent } from '../ui/category-items/category-items.component';
 
 @Component({
-  selector: 'budget',
-  standalone: true,
-  imports: [DatePickerComponent, TabNavComponent],
-  templateUrl: './budget.component.html',
-  styleUrl: './budget.component.scss',
+    selector: 'budget',
+    imports: [DatePickerComponent, TabNavComponent],
+    templateUrl: './budget.component.html',
+    styleUrl: './budget.component.scss'
 })
 export class BudgetComponent {
   date = signal<Date>(new Date());

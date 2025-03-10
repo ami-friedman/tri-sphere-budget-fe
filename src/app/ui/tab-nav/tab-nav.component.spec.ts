@@ -4,14 +4,16 @@ import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
 
 @Component({
-  selector: 'app-dummy-one',
-  template: '<p>Dummy One Component</p>',
+    selector: 'app-dummy-one',
+    template: '<p>Dummy One Component</p>',
+    standalone: false
 })
 class DummyOneComponent {}
 
 @Component({
-  selector: 'app-dummy-two',
-  template: '<p>Dummy Two Component</p>',
+    selector: 'app-dummy-two',
+    template: '<p>Dummy Two Component</p>',
+    standalone: false
 })
 class DummyTwoComponent {}
 
