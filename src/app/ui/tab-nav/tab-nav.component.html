@@ -1,7 +1,7 @@
 <p-tabView>
-  @for (item of tabs; track item.title) {
+  @for (item of tabs(); track item.title) {
     <p-tabPanel [header]="item.title">
-      <ng-container *ngComponentOutlet="item.component"></ng-container>
+      <ng-container *ngComponentOutlet="item.component; inputs: item.inputs"></ng-container>
     </p-tabPanel>
   }
 </p-tabView>

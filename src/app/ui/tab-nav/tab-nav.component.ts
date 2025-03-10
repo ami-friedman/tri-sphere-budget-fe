@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TabViewModule } from 'primeng/tabview';
 import { TabNavItem } from './tab-nav.interface';
 import { NgComponentOutlet } from '@angular/common';
@@ -11,5 +11,5 @@ import { NgComponentOutlet } from '@angular/common';
   styleUrl: './tab-nav.component.scss',
 })
 export class TabNavComponent {
-  @Input() tabs: TabNavItem[] | undefined;
+  tabs = input<TabNavItem[] | undefined>([]);
 }
