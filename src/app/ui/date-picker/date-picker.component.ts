@@ -1,6 +1,14 @@
-import { Component, input, OnInit, output, signal } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { CalendarModule } from 'primeng/calendar';
 import { FormsModule } from '@angular/forms';
+import { DatePickerService } from './data-access/date-picker.service';
 
 @Component({
   selector: 'tsb-date-picker',
@@ -10,6 +18,7 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './date-picker.component.scss',
 })
 export class DatePickerComponent implements OnInit {
+  datePickerSvc: DatePickerService = inject(DatePickerService);
   date = input.required<Date>();
   selectedDate = signal<Date>(new Date());
 

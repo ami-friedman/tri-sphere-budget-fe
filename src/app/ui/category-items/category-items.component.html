@@ -1,1 +1,4 @@
-<p>{{ body() }}</p>
+@for (exp of breakdown(); track $index) {
+  <div>{{exp.name}}: {{exp.amount}}</div>
+}
+<div>Total: {{ total() }}</div>

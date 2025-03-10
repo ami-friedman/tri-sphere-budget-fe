@@ -17,23 +17,7 @@ export class BudgetComponent {
     {
       title: 'Cash',
       component: CategoryItemsComponent,
-      inputs: {
-        body: 'Cash Expenses',
-      },
-    },
-    {
-      title: 'Monthly',
-      component: CategoryItemsComponent,
-      inputs: {
-        body: 'Monthly Expenses',
-      },
-    },
-    {
-      title: 'Savings',
-      component: CategoryItemsComponent,
-      inputs: {
-        body: 'Savings',
-      },
+      inputs: {},
     },
   ]);
   //Display a tab navigation with all expense category groups + income
