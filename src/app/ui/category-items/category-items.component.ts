@@ -6,10 +6,10 @@ import { DatePickerService } from '../date-picker/data-access/date-picker.servic
 import { switchMap } from 'rxjs';
 
 @Component({
-    selector: 'tsb-category-items',
-    imports: [],
-    templateUrl: './category-items.component.html',
-    styleUrl: './category-items.component.scss'
+  selector: 'category-items',
+  imports: [],
+  templateUrl: './category-items.component.html',
+  styleUrl: './category-items.component.scss',
 })
 export class CategoryItemsComponent {
   private budgetApiSvc: BudgetApiService = inject(BudgetApiService);

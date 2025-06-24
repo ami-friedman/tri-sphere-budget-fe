@@ -4,10 +4,10 @@ import { TabNavItem } from './tab-nav.interface';
 import { NgComponentOutlet } from '@angular/common';
 
 @Component({
-    selector: 'tsb-tab-nav',
-    imports: [TabViewModule, NgComponentOutlet],
-    templateUrl: './tab-nav.component.html',
-    styleUrl: './tab-nav.component.scss'
+  selector: 'tab-nav',
+  imports: [TabViewModule, NgComponentOutlet],
+  templateUrl: './tab-nav.component.html',
+  styleUrl: './tab-nav.component.scss',
 })
 export class TabNavComponent {
   tabs = input<TabNavItem[] | undefined>([]);

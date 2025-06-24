@@ -11,10 +11,10 @@ import { FormsModule } from '@angular/forms';
 import { DatePickerService } from './data-access/date-picker.service';
 
 @Component({
-    selector: 'tsb-date-picker',
-    imports: [CalendarModule, FormsModule],
-    templateUrl: './date-picker.component.html',
-    styleUrl: './date-picker.component.scss'
+  selector: 'date-picker',
+  imports: [CalendarModule, FormsModule],
+  templateUrl: './date-picker.component.html',
+  styleUrl: './date-picker.component.scss',
 })
 export class DatePickerComponent implements OnInit {
   datePickerSvc: DatePickerService = inject(DatePickerService);
