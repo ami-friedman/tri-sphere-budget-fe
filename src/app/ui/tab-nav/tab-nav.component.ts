@@ -1,11 +1,11 @@
 import { Component, input } from '@angular/core';
-import { TabViewModule } from 'primeng/tabview';
 import { TabNavItem } from './tab-nav.interface';
 import { NgComponentOutlet } from '@angular/common';
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 
 @Component({
   selector: 'tab-nav',
-  imports: [TabViewModule, NgComponentOutlet],
+  imports: [NgComponentOutlet, Tabs, TabList, TabPanels, Tab, TabPanel],
   templateUrl: './tab-nav.component.html',
   styleUrl: './tab-nav.component.scss',
 })
