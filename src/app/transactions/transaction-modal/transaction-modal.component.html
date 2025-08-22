@@ -1,9 +1,10 @@
-<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
-  <div class="max-w-xl mx-auto">
-    <h1 class="text-3xl md:text-4xl font-extrabold mb-8 text-center">Enter a New Transaction</h1>
-
-    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-      <form (ngSubmit)="onEnterTransaction()" class="space-y-6">
+<div class="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center z-50 p-4">
+  <div class="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+    <div class="p-8">
+      <h2 class="text-xl md:text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">
+        {{ isEditMode ? 'Edit Transaction' : 'Create New Transaction' }}
+      </h2>
+      <form (ngSubmit)="onSaveTransaction()" class="space-y-6">
         <div>
           <label for="transactionAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (₪)</label>
           <input type="number" id="transactionAmount" name="transactionAmount" [(ngModel)]="transactionAmount" required
@@ -24,25 +25,28 @@
           <select id="selectedCategory" name="selectedCategory" [(ngModel)]="selectedCategoryId" required
                   class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
             <option [ngValue]="null" disabled selected>Select a category</option>
-            @for (category of categories$ | async; track category.id) {
-              <option [ngValue]="category.id">{{ category.name }}</option>
+            @if (categories$ | async; as categories) {
+              @for (category of categories; track category.id) {
+                <option [ngValue]="category.id">{{ category.name }}</option>
+              }
             }
           </select>
         </div>
-        @if (transactionSuccessMessage) {
-          <div class="text-green-500 dark:text-green-400 text-sm font-semibold">
-            {{ transactionSuccessMessage }}
+        @if (errorMessage) {
+          <div class="text-red-500 dark:text-red-400 text-sm font-semibold mt-4">
+            {{ errorMessage }}
           </div>
         }
-        @if (transactionErrorMessage) {
-          <div class="text-red-500 dark:text-red-400 text-sm font-semibold">
-            {{ transactionErrorMessage }}
-          </div>
-        }
-        <button type="submit"
-                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
-          Enter Transaction
-        </button>
+        <div class="flex justify-end space-x-4 mt-6">
+          <button type="button" (click)="onClose()"
+                  class="py-2 px-4 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
+            Cancel
+          </button>
+          <button type="submit"
+                  class="py-2 px-4 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+            {{ isEditMode ? 'Save Changes' : 'Enter Transaction' }}
+          </button>
+        </div>
       </form>
     </div>
   </div>
