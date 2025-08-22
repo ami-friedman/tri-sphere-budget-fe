@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { SideBarComponent } from './ui/side-bar/side-bar.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SideBarComponent],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
+  standalone: true,
+  imports: [CommonModule, RouterOutlet],
+  template: ` <router-outlet></router-outlet> `,
 })
 export class AppComponent {
-  title = 'tri-sphere-budget';
+  title = 'trisphere-budget';
 }
