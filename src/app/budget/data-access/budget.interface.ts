@@ -1,3 +1,5 @@
+import { BudgetCategory } from '../budget.enums';
+
 export interface ExpenseBudget {
   id: number;
   name: string;
@@ -6,7 +8,7 @@ export interface ExpenseBudget {
 }
 
 export interface GetBudgetExpenseReq {
-  category_id: number;
+  category: BudgetCategory;
   month: string;
 }
 

@@ -1,21 +1,24 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { DatePickerComponent } from '../ui/date-picker/date-picker.component';
 import { TabNavComponent } from '../ui/tab-nav/tab-nav.component';
 import { TabNavItem } from '../ui/tab-nav/tab-nav.interface';
-import { CategoryItemsComponent } from '../ui/category-items/category-items.component';
+import { BudgetCategory } from './budget.enums';
+import { BudgetCashComponent } from './budget-cash/budget-cash.component';
+import { DatePickerService } from '../ui/date-picker/data-access/date-picker.service';
 
 @Component({
-    selector: 'budget',
-    imports: [DatePickerComponent, TabNavComponent],
-    templateUrl: './budget.component.html',
-    styleUrl: './budget.component.scss'
+  selector: 'budget',
+  imports: [DatePickerComponent, TabNavComponent],
+  templateUrl: './budget.component.html',
+  styleUrl: './budget.component.scss',
 })
 export class BudgetComponent {
+  datePickerService: DatePickerService = inject(DatePickerService);
   date = signal<Date>(new Date());
   tabs = signal<TabNavItem[]>([
     {
-      title: 'Cash',
-      component: CategoryItemsComponent,
+      title: BudgetCategory.Cash,
+      component: BudgetCashComponent,
       inputs: {},
     },
   ]);

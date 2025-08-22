@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 import { GetBudgetExpenseReq, MonthlyBudgetRes } from './budget.interface';
+import { BudgetCategory } from '../budget.enums';
 
 @Injectable({
   providedIn: 'root',

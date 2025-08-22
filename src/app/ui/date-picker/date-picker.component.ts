@@ -1,11 +1,4 @@
-import {
-  Component,
-  inject,
-  input,
-  OnInit,
-  output,
-  signal,
-} from '@angular/core';
+import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { CalendarModule } from 'primeng/calendar';
 import { FormsModule } from '@angular/forms';
 import { DatePickerService } from './data-access/date-picker.service';
@@ -21,8 +14,6 @@ export class DatePickerComponent implements OnInit {
   date = input.required<Date>();
   selectedDate = signal<Date>(new Date());
 
-  dateSelected = output<Date>();
-
   ngOnInit() {
     this.selectedDate.set(this.date());
   }
@@ -35,10 +26,13 @@ export class DatePickerComponent implements OnInit {
     this.updateCalendar(-1);
   }
 
+  dateSelected(date: Date): void {
+    this.datePickerSvc.setSelectedDate(date);
+  }
+
   private updateCalendar(interval: number): void {
     const newDate = new Date(this.selectedDate());
     newDate.setMonth(newDate.getMonth() + interval);
     this.selectedDate.set(newDate);
-    this.dateSelected.emit(this.selectedDate());
   }
 }
