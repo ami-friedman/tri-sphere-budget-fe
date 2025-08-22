@@ -1,0 +1,93 @@
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row items-center justify-between mb-8">
+      <h1 class="text-3xl md:text-4xl font-extrabold mb-4 md:mb-0">Transfers</h1>
+
+      <!-- Month and Year Selector -->
+      <div class="flex items-center space-x-4">
+        <button (click)="changeMonth('prev')"
+                class="py-1 px-3 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
+          &lt;
+        </button>
+        <select [(ngModel)]="selectedMonthName" (change)="onMonthChange()"
+                class="py-1 px-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+          @for (month of monthNames; track month) {
+            <option [value]="month">{{ month }}</option>
+          }
+        </select>
+        <select [(ngModel)]="selectedYear" (change)="onMonthChange()"
+                class="py-1 px-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+          @for (year of [2024, 2025, 2026]; track year) {
+            <option [value]="year">{{ year }}</option>
+          }
+        </select>
+        <button (click)="changeMonth('next')"
+                class="py-1 px-3 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
+          &gt;
+        </button>
+      </div>
+    </div>
+
+    <div class="flex justify-end items-center mb-8">
+      <button (click)="openModal()"
+              class="py-2 px-4 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+        + Add New Transfer
+      </button>
+    </div>
+
+    @if (categories$ | async; as categories) {
+      <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+        @if (transfers$ | async; as transfers) {
+          @if (transfers.length > 0) {
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">To Category</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  @for (transfer of transfers; track transfer.id) {
+                    <tr>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ transfer.transaction_date }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ transfer.description }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {{ getCategoryName(transfer, categories) }}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">
+                        ₪{{ transfer.amount | number:'1.2-2' }}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <button (click)="openModal(transfer)"
+                                class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
+                          Edit
+                        </button>
+                        <button (click)="onDeleteTransfer(transfer.id)"
+                                class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="text-gray-500 dark:text-gray-400 text-center">No transfers found for the selected month.</p>
+          }
+        }
+      </div>
+    }
+
+    @if (isModalOpen) {
+      <app-transfer-modal [transfer]="selectedTransferForEdit"
+                           (closeModal)="isModalOpen = false"
+                           (transferSaved)="onTransferSaved()">
+      </app-transfer-modal>
+    }
+  </div>
+</div>

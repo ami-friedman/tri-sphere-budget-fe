@@ -4,6 +4,7 @@ import { RegisterComponent } from './auth/register.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { BudgetComponent } from './budget/budget.component';
 import { TransactionComponent } from './transactions/transaction.component';
+import { TransferComponent } from './transfers/transfer.component';
 import { authGuard, publicGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
@@ -30,6 +31,11 @@ export const routes: Routes = [
   {
     path: 'transactions',
     component: TransactionComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'transfers',
+    component: TransferComponent,
     canActivate: [authGuard],
   },
   {

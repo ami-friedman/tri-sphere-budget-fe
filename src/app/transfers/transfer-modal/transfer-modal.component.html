@@ -1,0 +1,44 @@
+<div class="p-8">
+  <h2 class="text-xl md:text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">
+    {{ isEditMode ? 'Edit Transfer' : 'Create New Transfer' }}
+  </h2>
+  <form (ngSubmit)="onSaveTransfer()" class="space-y-6">
+    <div>
+      <label for="transferAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (₪)</label>
+      <input type="number" id="transferAmount" name="transferAmount" [(ngModel)]="transferAmount" required
+             class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
+    </div>
+    <div>
+      <label for="transferDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+      <input type="text" id="transferDescription" name="transferDescription" [(ngModel)]="transferDescription"
+             class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
+    </div>
+    <div>
+      <label for="selectedCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-300">To Category</label>
+      <select id="selectedCategory" name="selectedCategory" [(ngModel)]="selectedCategoryId" required
+              class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
+        <option [ngValue]="null" disabled selected>Select a savings category</option>
+        @if (savingsCategories$ | async; as categories) {
+          @for (category of categories; track category.id) {
+            <option [ngValue]="category.id">{{ category.name }}</option>
+          }
+        }
+      </select>
+    </div>
+    @if (errorMessage) {
+      <div class="text-red-500 dark:text-red-400 text-sm font-semibold mt-4">
+        {{ errorMessage }}
+      </div>
+    }
+    <div class="flex justify-end space-x-4 mt-6">
+      <button type="button" (click)="onClose()"
+              class="py-2 px-4 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
+        Cancel
+      </button>
+      <button type="submit"
+              class="py-2 px-4 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+        {{ isEditMode ? 'Save Changes' : 'Create Transfer' }}
+      </button>
+    </div>
+  </form>
+</div>

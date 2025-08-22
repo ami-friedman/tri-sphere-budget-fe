@@ -26,6 +26,20 @@ export interface TransactionUpdate {
   transaction_date?: string;
 }
 
+export interface TransferCreate {
+  category_id: string;
+  amount: number;
+  description?: string;
+  transaction_date: string;
+}
+
+export interface TransferUpdate {
+  category_id?: string;
+  amount?: number;
+  description?: string;
+  transaction_date?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -59,5 +73,27 @@ export class TransactionService {
 
   deleteTransaction(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/transactions/${id}`);
+  }
+
+  getTransfers(year: number, month: number): Observable<Transaction[]> {
+    let params = new HttpParams()
+      .set('year', year.toString())
+      .set('month', month.toString());
+    return this.http.get<Transaction[]>(`${this.baseUrl}/transfers`, { params });
+  }
+
+  createTransfer(transfer: TransferCreate): Observable<Transaction> {
+    return this.http.post<Transaction>(`${this.baseUrl}/transfers`, transfer);
+  }
+
+  updateTransfer(id: string, transfer: TransferUpdate): Observable<Transaction> {
+    return this.http.put<Transaction>(
+      `${this.baseUrl}/transfers/${id}`,
+      transfer,
+    );
+  }
+
+  deleteTransfer(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/transfers/${id}`);
   }
 }
