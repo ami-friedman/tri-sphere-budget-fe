@@ -1,36 +1,85 @@
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
-  <div class="max-w-xl mx-auto">
-    <h1 class="text-3xl md:text-4xl font-extrabold mb-8 text-center">Create and Manage Budget</h1>
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl md:text-4xl font-extrabold mb-8 text-center">Manage Your Budget</h1>
 
-    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-      <h2 class="text-xl md:text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Create a New Category</h2>
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+      <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+        <li class="mr-2" role="presentation">
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'monthly', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'monthly'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold"
+                  (click)="setActiveTab('monthly')"
+                  role="tab">
+            Monthly Expenses
+          </button>
+        </li>
+        <li class="mr-2" role="presentation">
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'savings', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'savings'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold"
+                  (click)="setActiveTab('savings')"
+                  role="tab">
+            Savings
+          </button>
+        </li>
+        <li class="mr-2" role="presentation">
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'cash', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'cash'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold"
+                  (click)="setActiveTab('cash')"
+                  role="tab">
+            Cash & Other
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+
+      @if (filteredCategories$ | async; as categories) {
+        <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Existing Categories ({{ activeTab | titlecase }})</h2>
+        @if (categories.length > 0) {
+          <div class="overflow-x-auto mb-6">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Budgeted Amount</th>
+              </tr>
+              </thead>
+              <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                @for (category of categories; track category.id) {
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">₪{{ category.budgeted_amount | number:'1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="text-gray-500 dark:text-gray-400 mb-6">No {{ activeTab | titlecase }} categories found. Create one below.</p>
+        }
+      }
+
+      <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Create New {{ activeTab | titlecase }} Category</h2>
       <form (ngSubmit)="onCreateCategory()" class="space-y-6">
         <div>
           <label for="categoryName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category Name</label>
           <input type="text" id="categoryName" name="categoryName" [(ngModel)]="categoryName" required
                  class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
         </div>
-        <div>
-          <label for="categoryType" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category Type</label>
-          <select id="categoryType" name="categoryType" [(ngModel)]="categoryType" required
-                  class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
-            @for (type of categoryTypes; track type) {
-              <option [ngValue]="type">{{ type }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label for="budgetedAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Budgeted Amount (₪)</label>
-          <input type="number" id="budgetedAmount" name="budgetedAmount" [(ngModel)]="categoryBudgetedAmount"
-                 class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
-        </div>
+        @if (activeTab !== 'cash') {
+          <div>
+            <label for="budgetedAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Budgeted Amount (₪)</label>
+            <input type="number" id="budgetedAmount" name="budgetedAmount" [(ngModel)]="categoryBudgetedAmount"
+                   class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
+          </div>
+        }
         @if (categorySuccessMessage) {
-          <div class="text-green-500 dark:text-green-400 text-sm font-semibold">
+          <div class="text-green-500 dark:text-green-400 text-sm font-semibold mt-4">
             {{ categorySuccessMessage }}
           </div>
         }
         @if (categoryErrorMessage) {
-          <div class="text-red-500 dark:text-red-400 text-sm font-semibold">
+          <div class="text-red-500 dark:text-red-400 text-sm font-semibold mt-4">
             {{ categoryErrorMessage }}
           </div>
         }
@@ -40,5 +89,6 @@
         </button>
       </form>
     </div>
+
   </div>
 </div>
