@@ -1,6 +1,7 @@
 <div class="flex h-screen">
-  <side-bar />
-  <div class="flex-1 overflow-auto">
-    <router-outlet />
-  </div>
+  <app-sidenav class="w-64 flex-shrink-0"></app-sidenav>
+
+  <main class="flex-grow overflow-y-auto">
+    <router-outlet></router-outlet>
+  </main>
 </div>
