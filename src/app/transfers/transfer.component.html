@@ -84,10 +84,12 @@
     }
 
     @if (isModalOpen) {
-      <app-transfer-modal [transfer]="selectedTransferForEdit"
-                           (closeModal)="isModalOpen = false"
-                           (transferSaved)="onTransferSaved()">
-      </app-transfer-modal>
+      <div class="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center z-50 p-4">
+        <app-transfer-modal [transfer]="selectedTransferForEdit"
+                             (closeModal)="isModalOpen = false"
+                             (transferSaved)="onTransferSaved()">
+        </app-transfer-modal>
+      </div>
     }
   </div>
 </div>
