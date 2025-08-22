@@ -35,9 +35,38 @@
       </button>
     </div>
 
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+      <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+        <li class="mr-2" role="presentation">
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'cash', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'cash'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold"
+                  (click)="setActiveTab('cash')"
+                  role="tab">
+            Cash & Other
+          </button>
+        </li>
+        <li class="mr-2" role="presentation">
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'monthly', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'monthly'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold"
+                  (click)="setActiveTab('monthly')"
+                  role="tab">
+            Monthly Expenses
+          </button>
+        </li>
+        <li class="mr-2" role="presentation">
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'savings', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'savings'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold"
+                  (click)="setActiveTab('savings')"
+                  role="tab">
+            Savings
+          </button>
+        </li>
+      </ul>
+    </div>
+
     @if (categories$ | async; as categories) {
       <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-        @if (transactions$ | async; as transactions) {
+        @if (filteredTransactions$ | async; as transactions) {
           @if (transactions.length > 0) {
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

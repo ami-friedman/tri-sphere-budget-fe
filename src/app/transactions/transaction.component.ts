@@ -6,8 +6,8 @@ import {
   Transaction,
   TransactionService,
 } from '../services/transaction.service';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { TransactionModalComponent } from './transaction-modal/transaction-modal.component';
 
 @Component({
@@ -19,8 +19,10 @@ import { TransactionModalComponent } from './transaction-modal/transaction-modal
 export class TransactionComponent implements OnInit {
   transactions$!: Observable<Transaction[]>;
   categories$!: Observable<Category[]>;
+  filteredTransactions$!: Observable<Transaction[]>;
   isModalOpen: boolean = false;
   selectedTransactionForEdit: Transaction | null = null;
+  activeTab: 'cash' | 'monthly' | 'savings' = 'cash';
 
   monthNames = [
     'January',
@@ -55,6 +57,19 @@ export class TransactionComponent implements OnInit {
         this.transactionService.getTransactions(params.year, params.month),
       ),
     );
+
+    this.filteredTransactions$ = combineLatest([
+      this.transactions$,
+      this.categories$,
+    ]).pipe(
+      map(([transactions, categories]) => {
+        const categoryMap = new Map(categories.map((c) => [c.id, c.type]));
+        return transactions.filter((t) => {
+          const categoryType = categoryMap.get(t.category_id);
+          return categoryType?.toLowerCase() === this.activeTab;
+        });
+      }),
+    );
   }
 
   onMonthChange(): void {
@@ -63,6 +78,24 @@ export class TransactionComponent implements OnInit {
       year: this.selectedYear,
       month: monthIndex + 1,
     });
+  }
+
+  setActiveTab(tab: 'cash' | 'monthly' | 'savings'): void {
+    this.activeTab = tab;
+    // We need to re-trigger the filtering when the tab changes.
+    // A simple way is to re-combine the latest values.
+    this.filteredTransactions$ = combineLatest([
+      this.transactions$,
+      this.categories$,
+    ]).pipe(
+      map(([transactions, categories]) => {
+        const categoryMap = new Map(categories.map((c) => [c.id, c.type]));
+        return transactions.filter((t) => {
+          const categoryType = categoryMap.get(t.category_id);
+          return categoryType?.toLowerCase() === this.activeTab;
+        });
+      }),
+    );
   }
 
   changeMonth(direction: 'prev' | 'next'): void {
