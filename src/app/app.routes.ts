@@ -2,7 +2,8 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { DataManagementComponent } from './data-management/data-management.component';
+import { BudgetComponent } from './budget/budget.component';
+import { TransactionsComponent } from './transactions/transactions.component';
 import { authGuard, publicGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
@@ -22,8 +23,13 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'data-management',
-    component: DataManagementComponent,
+    path: 'budget',
+    component: BudgetComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'transactions',
+    component: TransactionsComponent,
     canActivate: [authGuard],
   },
   {

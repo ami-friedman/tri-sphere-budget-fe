@@ -1,0 +1,49 @@
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
+  <div class="max-w-xl mx-auto">
+    <h1 class="text-3xl md:text-4xl font-extrabold mb-8 text-center">Enter a New Transaction</h1>
+
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+      <form (ngSubmit)="onEnterTransaction()" class="space-y-6">
+        <div>
+          <label for="transactionAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (₪)</label>
+          <input type="number" id="transactionAmount" name="transactionAmount" [(ngModel)]="transactionAmount" required
+                 class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
+        </div>
+        <div>
+          <label for="transactionDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+          <input type="text" id="transactionDescription" name="transactionDescription" [(ngModel)]="transactionDescription"
+                 class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
+        </div>
+        <div>
+          <label for="transactionDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+          <input type="date" id="transactionDate" name="transactionDate" [(ngModel)]="transactionDate" required
+                 class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
+        </div>
+        <div>
+          <label for="selectedCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+          <select id="selectedCategory" name="selectedCategory" [(ngModel)]="selectedCategoryId" required
+                  class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
+            <option [ngValue]="null" disabled selected>Select a category</option>
+            @for (category of categories$ | async; track category.id) {
+              <option [ngValue]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </div>
+        @if (transactionSuccessMessage) {
+          <div class="text-green-500 dark:text-green-400 text-sm font-semibold">
+            {{ transactionSuccessMessage }}
+          </div>
+        }
+        @if (transactionErrorMessage) {
+          <div class="text-red-500 dark:text-red-400 text-sm font-semibold">
+            {{ transactionErrorMessage }}
+          </div>
+        }
+        <button type="submit"
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
+          Enter Transaction
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
