@@ -16,18 +16,32 @@ export interface CategoryCreate {
   budgeted_amount?: number;
 }
 
+// New interface for updating a Category
+export interface CategoryUpdate {
+  name?: string;
+  type?: string;
+  budgeted_amount?: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class CategoryService {
   private http = inject(HttpClient);
-  private apiUrl = environment.baseUrl;
+  private baseUrl = environment.baseUrl;
 
   getCategories(): Observable<Category[]> {
-    return this.http.get<Category[]>(`${this.apiUrl}/categories`);
+    return this.http.get<Category[]>(`${this.baseUrl}/categories`);
   }
 
   createCategory(category: CategoryCreate): Observable<Category> {
-    return this.http.post<Category>(`${this.apiUrl}/categories`, category);
+    return this.http.post<Category>(`${this.baseUrl}/categories`, category);
+  }
+
+  updateCategory(id: string, category: CategoryUpdate): Observable<Category> {
+    return this.http.put<Category>(
+      `${this.baseUrl}/categories/${id}`,
+      category,
+    );
   }
 }
