@@ -1,7 +1,34 @@
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
   <div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl md:text-4xl font-extrabold text-center md:text-left">Transaction History</h1>
+    <div class="flex flex-col md:flex-row items-center justify-between mb-8">
+      <h1 class="text-3xl md:text-4xl font-extrabold mb-4 md:mb-0">Transaction History</h1>
+
+      <!-- Month and Year Selector -->
+      <div class="flex items-center space-x-4">
+        <button (click)="changeMonth('prev')"
+                class="py-1 px-3 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
+          &lt;
+        </button>
+        <select [(ngModel)]="selectedMonthName" (change)="onMonthChange()"
+                class="py-1 px-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+          @for (month of monthNames; track month) {
+            <option [value]="month">{{ month }}</option>
+          }
+        </select>
+        <select [(ngModel)]="selectedYear" (change)="onMonthChange()"
+                class="py-1 px-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+          @for (year of [2024, 2025, 2026]; track year) {
+            <option [value]="year">{{ year }}</option>
+          }
+        </select>
+        <button (click)="changeMonth('next')"
+                class="py-1 px-3 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
+          &gt;
+        </button>
+      </div>
+    </div>
+
+    <div class="flex justify-end items-center mb-8">
       <button (click)="openModal()"
               class="py-2 px-4 rounded-lg text-sm font-bold text-white bg-green-600 hover:bg-green-700 transition-colors duration-200">
         + Add New Transaction

@@ -6,8 +6,8 @@ import {
   Transaction,
   TransactionService,
 } from '../services/transaction.service';
-import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { TransactionModalComponent } from './transaction-modal/transaction-modal.component';
 
 @Component({
@@ -22,19 +22,67 @@ export class TransactionComponent implements OnInit {
   isModalOpen: boolean = false;
   selectedTransactionForEdit: Transaction | null = null;
 
+  monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  selectedMonthName: string = this.monthNames[new Date().getMonth()];
+  selectedYear: number = new Date().getFullYear();
+
   private categoryService = inject(CategoryService);
   private transactionService = inject(TransactionService);
-  private refreshTransactions$ = new BehaviorSubject<void>(undefined);
+  private refreshTransactions$ = new BehaviorSubject<{
+    year: number;
+    month: number;
+  }>({ year: this.selectedYear, month: new Date().getMonth() + 1 });
 
   ngOnInit(): void {
     this.categories$ = this.categoryService.getCategories();
+    this.onMonthChange();
 
     this.transactions$ = this.refreshTransactions$.pipe(
-      switchMap(() => this.transactionService.getTransactions()),
+      switchMap((params) =>
+        this.transactionService.getTransactions(params.year, params.month),
+      ),
     );
+  }
 
-    // This line triggers the initial data fetch
-    this.refreshTransactions$.next(undefined);
+  onMonthChange(): void {
+    const monthIndex = this.monthNames.indexOf(this.selectedMonthName);
+    this.refreshTransactions$.next({
+      year: this.selectedYear,
+      month: monthIndex + 1,
+    });
+  }
+
+  changeMonth(direction: 'prev' | 'next'): void {
+    let currentMonthIndex = this.monthNames.indexOf(this.selectedMonthName);
+    if (direction === 'next') {
+      if (currentMonthIndex === 11) {
+        this.selectedMonthName = this.monthNames[0];
+        this.selectedYear++;
+      } else {
+        this.selectedMonthName = this.monthNames[currentMonthIndex + 1];
+      }
+    } else {
+      if (currentMonthIndex === 0) {
+        this.selectedMonthName = this.monthNames[11];
+        this.selectedYear--;
+      } else {
+        this.selectedMonthName = this.monthNames[currentMonthIndex - 1];
+      }
+    }
+    this.onMonthChange();
   }
 
   getCategoryName(
@@ -52,14 +100,14 @@ export class TransactionComponent implements OnInit {
   }
 
   onTransactionSaved(): void {
-    this.refreshTransactions$.next(undefined);
+    this.onMonthChange();
   }
 
   onDeleteTransaction(transactionId: string): void {
     if (confirm('Are you sure you want to delete this transaction?')) {
       this.transactionService.deleteTransaction(transactionId).subscribe({
         next: () => {
-          this.refreshTransactions$.next(undefined);
+          this.onMonthChange();
         },
         error: (err) => {
           console.error('Failed to delete transaction', err);

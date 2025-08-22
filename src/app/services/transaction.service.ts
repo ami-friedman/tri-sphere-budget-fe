@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 
@@ -33,8 +33,11 @@ export class TransactionService {
   private http = inject(HttpClient);
   private baseUrl = environment.baseUrl;
 
-  getTransactions(): Observable<Transaction[]> {
-    return this.http.get<Transaction[]>(`${this.baseUrl}/transactions`);
+  getTransactions(year: number, month: number): Observable<Transaction[]> {
+    let params = new HttpParams()
+      .set('year', year.toString())
+      .set('month', month.toString());
+    return this.http.get<Transaction[]>(`${this.baseUrl}/transactions`, { params });
   }
 
   createTransaction(transaction: TransactionCreate): Observable<Transaction> {

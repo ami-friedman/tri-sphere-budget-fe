@@ -1,7 +1,33 @@
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
   @if (dashboardSummary$ | async; as summary) {
     <div class="max-w-7xl mx-auto">
-      <h1 class="text-3xl md:text-4xl font-extrabold mb-8 text-center md:text-left">Current Month Dashboard</h1>
+      <div class="flex flex-col md:flex-row items-center justify-between mb-8">
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-4 md:mb-0">Dashboard</h1>
+
+        <!-- Month and Year Selector -->
+        <div class="flex items-center space-x-4">
+          <button (click)="changeMonth('prev')"
+                  class="py-1 px-3 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
+            &lt;
+          </button>
+          <select [(ngModel)]="selectedMonthName" (change)="onMonthChange()"
+                  class="py-1 px-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+            @for (month of monthNames; track month) {
+              <option [value]="month">{{ month }}</option>
+            }
+          </select>
+          <select [(ngModel)]="selectedYear" (change)="onMonthChange()"
+                  class="py-1 px-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+            @for (year of [2024, 2025, 2026]; track year) {
+              <option [value]="year">{{ year }}</option>
+            }
+          </select>
+          <button (click)="changeMonth('next')"
+                  class="py-1 px-3 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
+            &gt;
+          </button>
+        </div>
+      </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">

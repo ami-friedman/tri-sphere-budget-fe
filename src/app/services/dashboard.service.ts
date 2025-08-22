@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 
@@ -30,7 +30,16 @@ export class DashboardService {
   private http = inject(HttpClient);
   private baseUrl = environment.baseUrl;
 
-  getDashboardSummary(): Observable<DashboardSummary> {
-    return this.http.get<DashboardSummary>(`${this.baseUrl}/dashboard`);
+  getDashboardSummary(
+    year: number,
+    month: number,
+  ): Observable<DashboardSummary> {
+    let params = new HttpParams()
+      .set('year', year.toString())
+      .set('month', month.toString());
+
+    return this.http.get<DashboardSummary>(`${this.baseUrl}/dashboard`, {
+      params,
+    });
   }
 }
