@@ -2,30 +2,35 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
-import { map, startWith, switchMap } from 'rxjs/operators';
-import { Transaction, TransactionService, TransactionWithCategory } from '../services/transaction.service';
+import { map, startWith, switchMap, tap } from 'rxjs/operators';
+import { TransactionService, TransactionWithCategory } from '../services/transaction.service';
 import { Category, CategoryService, CategoryType } from '../services/category.service';
+
+type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
 
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe, TitleCasePipe],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe],
   templateUrl: './transaction.component.html',
 })
 export class TransactionComponent implements OnInit {
-  activeTab: 'income' | 'expenses' = 'expenses';
-
   private transactionService = inject(TransactionService);
   private categoryService = inject(CategoryService);
   private fb = inject(FormBuilder);
-  private refresh$ = new BehaviorSubject<void>(undefined);
 
+  // --- State Management ---
   transactionForm!: FormGroup;
   editingTransactionId: string | null = null;
 
+  private refresh$ = new BehaviorSubject<void>(undefined);
+  // **THIS IS THE FIX**: Removed the 'private' keyword.
+  activeTab$ = new BehaviorSubject<TransactionTab>('monthly');
+
   allCategories: Category[] = [];
-  filteredCategories: Category[] = [];
-  filteredTransactions$!: Observable<TransactionWithCategory[]>;
+  filteredCategoriesForForm: Category[] = [];
+
+  transactions$!: Observable<TransactionWithCategory[]>;
 
   currentDate = new Date();
 
@@ -44,39 +49,46 @@ export class TransactionComponent implements OnInit {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth() + 1;
 
-    const transactions$ = this.refresh$.pipe(
+    const allTransactions$ = this.refresh$.pipe(
       switchMap(() => this.transactionService.getTransactions(year, month))
     );
 
-    this.categoryService.getCategories().subscribe(cats => {
-      this.allCategories = cats;
-      this.setActiveTab(this.activeTab);
-    });
+    const allCategories$ = this.categoryService.getCategories().pipe(
+      tap(cats => this.allCategories = cats)
+    );
 
-    this.filteredTransactions$ = combineLatest([
-      transactions$.pipe(startWith([])),
-      this.categoryService.getCategories().pipe(startWith([]))
+    this.transactions$ = combineLatest([
+      allTransactions$.pipe(startWith([])),
+      allCategories$.pipe(startWith([])),
+      this.activeTab$
     ]).pipe(
-      map(([transactions, categories]) => {
+      map(([transactions, categories, activeTab]) => {
         const categoryMap = new Map(categories.map(c => [c.id, c]));
-        return transactions.map(t => ({
-          ...t,
-          category: categoryMap.get(t.category_id)
-        })).filter(t => t.category) as TransactionWithCategory[];
+
+        return transactions
+          .map(t => ({ ...t, category: categoryMap.get(t.category_id) }))
+          .filter(t => t.category && t.category.type.toLowerCase() === activeTab) as TransactionWithCategory[];
       })
     );
+
+    this.activeTab$.subscribe(tab => {
+      this.updateFilteredCategoriesForForm(tab);
+      this.cancelEdit();
+    });
   }
 
-  setActiveTab(tab: 'income' | 'expenses'): void {
-    this.activeTab = tab;
-    if (tab === 'income') {
-      this.filteredCategories = this.allCategories.filter(c => c.type === CategoryType.INCOME);
-    } else {
-      this.filteredCategories = this.allCategories.filter(c =>
-        c.type !== CategoryType.INCOME && c.type !== CategoryType.TRANSFER
-      );
-    }
-    this.cancelEdit();
+  updateFilteredCategoriesForForm(tab: TransactionTab): void {
+    const typeMap: Record<TransactionTab, CategoryType> = {
+      income: CategoryType.INCOME,
+      cash: CategoryType.CASH,
+      monthly: CategoryType.MONTHLY,
+      savings: CategoryType.SAVINGS,
+    };
+    this.filteredCategoriesForForm = this.allCategories.filter(c => c.type === typeMap[tab]);
+  }
+
+  setActiveTab(tab: TransactionTab): void {
+    this.activeTab$.next(tab);
   }
 
   onEditTransaction(transaction: TransactionWithCategory): void {

@@ -9,8 +9,8 @@
         <div class="md:col-span-2">
           <label class="block mb-2 text-sm font-medium">Category</label>
           <select formControlName="category_id" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
-            <option [ngValue]="null" disabled>Select a {{ activeTab | titlecase }} Category</option>
-            @for(cat of filteredCategories; track cat.id) {
+            <option [ngValue]="null" disabled>Select a Category</option>
+            @for(cat of filteredCategoriesForForm; track cat.id) {
               <option [value]="cat.id">{{ cat.name }}</option>
             }
           </select>
@@ -42,24 +42,38 @@
     <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
       <ul class="flex flex-wrap -mb-px font-medium text-center">
         <li class="mr-2">
-          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'expenses'}"
-                  (click)="setActiveTab('expenses')"
+          <button (click)="setActiveTab('income')"
+                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'income'}"
                   class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
-            Expenses
+            Income
           </button>
         </li>
         <li class="mr-2">
-          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'income'}"
-                  (click)="setActiveTab('income')"
+          <button (click)="setActiveTab('cash')"
+                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'cash'}"
                   class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
-            Income
+            Cash & Other
+          </button>
+        </li>
+        <li class="mr-2">
+          <button (click)="setActiveTab('monthly')"
+                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'monthly'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
+            Monthly Expenses
+          </button>
+        </li>
+        <li class="mr-2">
+          <button (click)="setActiveTab('savings')"
+                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'savings'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
+            Savings
           </button>
         </li>
       </ul>
     </div>
 
     <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-      @if (filteredTransactions$ | async; as transactions) {
+      @if (transactions$ | async; as transactions) {
         @if (transactions.length > 0) {
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead>
@@ -72,22 +86,20 @@
             </thead>
             <tbody>
               @for (transaction of transactions; track transaction.id) {
-                @if ( (activeTab === 'income' && transaction.category?.type === 'Income') || (activeTab === 'expenses' && transaction.category?.type !== 'Income') ) {
-                  <tr>
-                    <td class="px-6 py-4">{{ transaction.transaction_date | date:'longDate' }}</td>
-                    <td class="px-6 py-4">{{ transaction.category?.name }}</td>
-                    <td class="px-6 py-4 text-right" [class.text-green-500]="transaction.category?.type === 'Income'">{{ transaction.amount | currency:'ILS':'symbol':'1.2-2' }}</td>
-                    <td class="px-6 py-4 text-right space-x-4">
-                      <button (click)="onEditTransaction(transaction)" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">Edit</button>
-                      <button (click)="onDeleteTransaction(transaction)" class="font-medium text-red-600 dark:text-red-400 hover:underline">Delete</button>
-                    </td>
-                  </tr>
-                }
+                <tr>
+                  <td class="px-6 py-4">{{ transaction.transaction_date | date:'longDate' }}</td>
+                  <td class="px-6 py-4">{{ transaction.category?.name }}</td>
+                  <td class="px-6 py-4 text-right" [class.text-green-500]="transaction.category?.type === 'Income'">{{ transaction.amount | currency:'ILS':'symbol':'1.2-2' }}</td>
+                  <td class="px-6 py-4 text-right space-x-4">
+                    <button (click)="onEditTransaction(transaction)" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">Edit</button>
+                    <button (click)="onDeleteTransaction(transaction)" class="font-medium text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                  </td>
+                </tr>
               }
             </tbody>
           </table>
         } @else {
-          <div class="text-center py-10"><p>No transactions found for this period.</p></div>
+          <div class="text-center py-10"><p>No transactions found for this period in this category.</p></div>
         }
       }
     </div>
