@@ -3,23 +3,31 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 
+export enum CategoryType {
+  CASH = 'Cash',
+  MONTHLY = 'Monthly',
+  SAVINGS = 'Savings',
+  TRANSFER = 'Transfer',
+  INCOME = 'Income',
+}
+
 export interface Category {
   id: string;
   name: string;
-  type: string;
+  type: CategoryType;
   budgeted_amount: number;
+  created_at: string;
 }
 
 export interface CategoryCreate {
   name: string;
-  type: string;
+  type: CategoryType;
   budgeted_amount?: number;
 }
 
-// New interface for updating a Category
 export interface CategoryUpdate {
   name?: string;
-  type?: string;
+  type?: CategoryType;
   budgeted_amount?: number;
 }
 
@@ -39,9 +47,10 @@ export class CategoryService {
   }
 
   updateCategory(id: string, category: CategoryUpdate): Observable<Category> {
-    return this.http.put<Category>(
-      `${this.baseUrl}/categories/${id}`,
-      category,
-    );
+    return this.http.put<Category>(`${this.baseUrl}/categories/${id}`, category);
+  }
+
+  deleteCategory(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/categories/${id}`);
   }
 }

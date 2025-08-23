@@ -1,105 +1,87 @@
-import { Component, inject, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import {
-  Category,
-  CategoryCreate,
-  CategoryUpdate,
-  CategoryService,
-} from '../../services/category.service';
+import { Component, ElementRef, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { CommonModule, TitleCasePipe } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Category, CategoryCreate, CategoryService, CategoryType, CategoryUpdate } from '../../services/category.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-category-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TitleCasePipe],
   templateUrl: './category-modal.component.html',
 })
-export class CategoryModalComponent {
-  // Inputs and Outputs
-  category = input<Category | null>(null);
-  activeTab = input<'monthly' | 'savings' | 'cash'>('monthly');
-  closeModal = output<void>();
-  categorySaved = output<void>();
+export class CategoryModalComponent implements OnInit, OnDestroy {
+  @Input() category: Category | null = null;
+  @Input() activeTab: 'income' | 'cash' | 'monthly' | 'savings' = 'income';
 
-  // Form State
-  categoryName: string = '';
-  categoryType: string = '';
-  categoryBudgetedAmount: number | null = null;
-  errorMessage: string = '';
-  isEditMode: boolean = false;
+  @Output() closeModal = new EventEmitter<void>();
+  @Output() categorySaved = new EventEmitter<void>();
 
-  categoryTypes = ['Cash', 'Monthly', 'Savings', 'Transfer'];
-
+  private fb = inject(FormBuilder);
   private categoryService = inject(CategoryService);
 
+  categoryForm!: FormGroup;
+  isEditMode = false;
+  errorMessage: string | null = null;
+  private formChangesSubscription!: Subscription;
+
   ngOnInit(): void {
-    const currentCategory = this.category();
-    this.isEditMode = !!currentCategory;
+    this.isEditMode = !!this.category;
+    const categoryType = new TitleCasePipe().transform(this.activeTab) as CategoryType;
 
-    if (this.isEditMode && currentCategory) {
-      this.categoryName = currentCategory.name;
-      this.categoryType = currentCategory.type;
-      this.categoryBudgetedAmount = currentCategory.budgeted_amount;
-    } else {
-      this.categoryType =
-        this.activeTab() === 'monthly'
-          ? 'Monthly'
-          : this.activeTab() === 'savings'
-            ? 'Savings'
-            : 'Cash';
-      this.categoryBudgetedAmount = 0;
-    }
-  }
+    this.categoryForm = this.fb.group({
+      name: [this.category?.name || '', Validators.required],
+      budgeted_amount: [this.category?.budgeted_amount || 0.00, Validators.min(0)],
+      type: [this.category?.type || categoryType, Validators.required],
+    });
 
-  onSaveCategory(): void {
-    if (this.isEditMode) {
-      this.updateCategory();
-    } else {
-      this.createCategory();
-    }
-  }
-
-  createCategory(): void {
-    const newCategory: CategoryCreate = {
-      name: this.categoryName,
-      type: this.categoryType,
-      budgeted_amount: this.categoryBudgetedAmount ?? 0,
-    };
-    this.categoryService.createCategory(newCategory).subscribe({
-      next: () => {
-        this.categorySaved.emit();
-        this.closeModal.emit();
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.detail || 'Failed to create category.';
-      },
+    this.formChangesSubscription = this.categoryForm.valueChanges.subscribe(() => {
+      this.errorMessage = null;
     });
   }
 
-  updateCategory(): void {
-    const categoryToUpdate: CategoryUpdate = {
-      name: this.categoryName,
-      type: this.categoryType,
-      budgeted_amount: this.categoryBudgetedAmount ?? 0,
-    };
-
-    if (this.category()) {
-      this.categoryService
-        .updateCategory(this.category()!.id, categoryToUpdate)
-        .subscribe({
-          next: () => {
-            this.categorySaved.emit();
-            this.closeModal.emit();
-          },
-          error: (err) => {
-            this.errorMessage =
-              err.error?.detail || 'Failed to update category.';
-          },
-        });
+  // **NEW METHOD** to handle backdrop clicks cleanly
+  onBackdropClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.closeModal.emit();
     }
   }
 
-  onClose(): void {
-    this.closeModal.emit();
+  ngOnDestroy(): void {
+    if (this.formChangesSubscription) {
+      this.formChangesSubscription.unsubscribe();
+    }
+  }
+
+  onSubmit(): void {
+    if (this.categoryForm.invalid) {
+      return;
+    }
+    this.errorMessage = null;
+
+    const formValue = this.categoryForm.value;
+    const payload: CategoryCreate | CategoryUpdate = {
+      name: formValue.name,
+      budgeted_amount: formValue.budgeted_amount,
+      type: formValue.type as CategoryType,
+    };
+
+    const apiCall = this.isEditMode && this.category
+      ? this.categoryService.updateCategory(this.category.id, payload)
+      : this.categoryService.createCategory(payload as CategoryCreate);
+
+    apiCall.subscribe({
+      next: () => {
+        this.categorySaved.emit();
+      },
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 409) {
+          this.errorMessage = `A category named "${payload.name}" already exists.`;
+        } else {
+          this.errorMessage = 'An unexpected error occurred. Please try again.';
+        }
+      }
+    });
   }
 }

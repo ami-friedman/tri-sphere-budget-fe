@@ -1,122 +1,90 @@
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
   <div class="max-w-7xl mx-auto">
-    <div class="flex flex-col md:flex-row items-center justify-between mb-8">
-      <h1 class="text-3xl md:text-4xl font-extrabold mb-4 md:mb-0">Transaction History</h1>
+    <h1 class="text-3xl md:text-4xl font-extrabold mb-8">Transactions</h1>
 
-      <!-- Month and Year Selector -->
-      <div class="flex items-center space-x-4">
-        <button (click)="changeMonth('prev')"
-                class="py-1 px-3 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
-          &lt;
-        </button>
-        <select [(ngModel)]="selectedMonthName" (change)="onMonthChange()"
-                class="py-1 px-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
-          @for (month of monthNames; track month) {
-            <option [value]="month">{{ month }}</option>
-          }
-        </select>
-        <select [(ngModel)]="selectedYear" (change)="onMonthChange()"
-                class="py-1 px-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
-          @for (year of [2024, 2025, 2026]; track year) {
-            <option [value]="year">{{ year }}</option>
-          }
-        </select>
-        <button (click)="changeMonth('next')"
-                class="py-1 px-3 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
-          &gt;
-        </button>
-      </div>
-    </div>
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold mb-6">Add New Transaction</h2>
+      <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
 
-    <div class="flex justify-end items-center mb-8">
-      <button (click)="openModal()"
-              class="py-2 px-4 rounded-lg text-sm font-bold text-white bg-green-600 hover:bg-green-700 transition-colors duration-200">
-        + Add New Transaction
-      </button>
+        <div class="flex flex-col">
+          <label for="category" class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+          <select id="category" formControlName="category_id" class="py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+            <option [ngValue]="null" disabled>Select a {{ activeTab | titlecase }} Category</option>
+            @for(cat of filteredCategories; track cat.id) {
+              <option [value]="cat.id">{{ cat.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="flex flex-col">
+          <label for="amount" class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Amount (₪)</label>
+          <input type="number" id="amount" formControlName="amount" placeholder="0.00" class="py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+
+        <div class="flex flex-col">
+          <label for="date" class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+          <input type="date" id="date" formControlName="transaction_date" class="py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+
+        <button type="submit" [disabled]="transactionForm.invalid"
+                class="w-full py-2 px-4 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200">
+          Add Transaction
+        </button>
+      </form>
     </div>
 
     <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
       <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
         <li class="mr-2" role="presentation">
-          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'cash', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'cash'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold"
-                  (click)="setActiveTab('cash')"
-                  role="tab">
-            Cash & Other
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'expenses', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'expenses'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold" (click)="setActiveTab('expenses')" role="tab">
+            Expenses
           </button>
         </li>
         <li class="mr-2" role="presentation">
-          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'monthly', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'monthly'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold"
-                  (click)="setActiveTab('monthly')"
-                  role="tab">
-            Monthly Expenses
-          </button>
-        </li>
-        <li class="mr-2" role="presentation">
-          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'savings', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'savings'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold"
-                  (click)="setActiveTab('savings')"
-                  role="tab">
-            Savings
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'income', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'income'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold" (click)="setActiveTab('income')" role="tab">
+            Income
           </button>
         </li>
       </ul>
     </div>
 
-    @if (categories$ | async; as categories) {
-      <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-        @if (filteredTransactions$ | async; as transactions) {
-          @if (transactions.length > 0) {
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  @for (transaction of transactions; track transaction.id) {
+    <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+      @if (filteredTransactions$ | async; as transactions) {
+        @if (transactions.length > 0) {
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+              </tr>
+              </thead>
+              <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                @for (transaction of transactions; track transaction.id) {
+                  @if ( (activeTab === 'income' && transaction.category?.type === 'Income') || (activeTab === 'expenses' && transaction.category?.type !== 'Income') ) {
                     <tr>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ transaction.transaction_date }}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ transaction.description }}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {{ getCategoryName(transaction, categories) }}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" [ngClass]="{'text-green-600 dark:text-green-400': transaction.amount > 0, 'text-red-600 dark:text-red-400': transaction.amount < 0}">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ transaction.transaction_date | date:'longDate' }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ getCategoryName(transaction.category_id) }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold"
+                          [ngClass]="{'text-green-600 dark:text-green-400': transaction.category?.type === 'Income', 'text-gray-900 dark:text-gray-100': transaction.category?.type !== 'Income'}">
                         ₪{{ transaction.amount | number:'1.2-2' }}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        <button (click)="openModal(transaction)"
-                                class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
-                          Edit
-                        </button>
-                        <button (click)="onDeleteTransaction(transaction.id)"
-                                class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">
-                          Delete
-                        </button>
                       </td>
                     </tr>
                   }
-                </tbody>
-              </table>
-            </div>
-          } @else {
-            <p class="text-gray-500 dark:text-gray-400 text-center">No transactions found. Add a new one.</p>
-          }
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="text-center py-10">
+            <p class="text-gray-500 dark:text-gray-400">No transactions found for this period.</p>
+          </div>
         }
-      </div>
-    }
+      }
+    </div>
 
-    @if (isModalOpen) {
-      <app-transaction-modal [transaction]="selectedTransactionForEdit"
-                             (closeModal)="isModalOpen = false"
-                             (transactionSaved)="onTransactionSaved()">
-      </app-transaction-modal>
-    }
   </div>
 </div>

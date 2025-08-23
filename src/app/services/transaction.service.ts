@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
+import { Category } from './category.service'; // Import Category
 
 export interface Transaction {
   id: string;
@@ -11,6 +12,11 @@ export interface Transaction {
   transaction_date: string; // ISO 8601 format
 }
 
+// NEW: This interface represents a transaction bundled with its full category object.
+export interface TransactionWithCategory extends Transaction {
+  category?: Category;
+}
+
 export interface TransactionCreate {
   category_id: string;
   amount: number;
@@ -18,7 +24,6 @@ export interface TransactionCreate {
   transaction_date: string;
 }
 
-// New interface for updating a Transaction
 export interface TransactionUpdate {
   category_id?: string;
   amount?: number;
