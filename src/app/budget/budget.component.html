@@ -1,51 +1,46 @@
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
   <div class="max-w-7xl mx-auto">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl md:text-4xl font-extrabold text-center md:text-left">Manage Your Budget</h1>
-      <button (click)="openModal()"
-              class="py-2 px-4 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+      <h1 class="text-3xl md:text-4xl font-extrabold">Manage Your Budget</h1>
+      <button (click)="openModal()" class="py-2 px-4 rounded-lg font-bold text-sm text-white bg-blue-600 hover:bg-blue-700">
         + Add New Category
       </button>
     </div>
 
     <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
-      <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
-        <li class="mr-2" role="presentation">
-          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'income', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'income'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold"
+      <ul class="flex flex-wrap -mb-px font-medium text-center">
+        <li class="mr-2">
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'income'}"
                   (click)="setActiveTab('income')"
-                  role="tab">
+                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
             Income
           </button>
         </li>
-        <li class="mr-2" role="presentation">
-          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'cash', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'cash'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold"
+        <li class="mr-2">
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'cash'}"
                   (click)="setActiveTab('cash')"
-                  role="tab">
+                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
             Cash & Other
           </button>
         </li>
-        <li class="mr-2" role="presentation">
-          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'monthly', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'monthly'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold"
+        <li class="mr-2">
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'monthly'}"
                   (click)="setActiveTab('monthly')"
-                  role="tab">
+                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
             Monthly Expenses
           </button>
         </li>
-        <li class="mr-2" role="presentation">
-          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'savings', 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'savings'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold"
+        <li class="mr-2">
+          <button [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'savings'}"
                   (click)="setActiveTab('savings')"
-                  role="tab">
+                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
             Savings
           </button>
         </li>
       </ul>
     </div>
 
-    <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+    <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
       @if (filteredCategories$ | async; as categories) {
         @if (categories.length > 0) {
           <div class="overflow-x-auto">
@@ -63,21 +58,23 @@
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
               </thead>
-              <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody>
                 @for (category of categories; track category.id) {
                   <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td class="px-6 py-4">{{ category.name }}</td>
+                    <td class="px-6 py-4">
                       @if (category.budgeted_amount > 0) {
-                        <span>₪{{ category.budgeted_amount | number:'1.2-2' }}</span>
+                        <span>{{ category.budgeted_amount | currency:'ILS':'symbol':'1.2-2' }}</span>
                       } @else {
                         <span>N/A</span>
                       }
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button (click)="openModal(category)"
-                              class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
+                    <td class="px-6 py-4 text-right space-x-4">
+                      <button (click)="openModal(category)" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">
                         Edit
+                      </button>
+                      <button (click)="onDeleteCategory(category)" class="font-medium text-red-600 dark:text-red-400 hover:underline">
+                        Delete
                       </button>
                     </td>
                   </tr>
@@ -88,16 +85,13 @@
         } @else {
           <div class="text-center py-10">
             <p class="text-gray-500 dark:text-gray-400">No {{ activeTab | titlecase }} categories found.</p>
-            <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">Click "+ Add New Category" to get started.</p>
           </div>
         }
       }
     </div>
 
     @if (isModalOpen) {
-      <app-category-modal [category]="selectedCategoryForEdit" [activeTab]="activeTab"
-                          (closeModal)="isModalOpen = false"
-                          (categorySaved)="onCategorySaved()">
+      <app-category-modal [category]="selectedCategoryForEdit" [activeTab]="activeTab" (closeModal)="isModalOpen = false" (categorySaved)="onCategorySaved()">
       </app-category-modal>
     }
   </div>

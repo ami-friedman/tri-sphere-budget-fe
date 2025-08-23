@@ -1,53 +1,79 @@
-<div class="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center z-50 p-4">
-  <div class="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
-    <div class="p-8">
-      <h2 class="text-xl md:text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">
-        {{ isEditMode ? 'Edit Transaction' : 'Create New Transaction' }}
-      </h2>
-      <form (ngSubmit)="onSaveTransaction()" class="space-y-6">
-        <div>
-          <label for="transactionAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (₪)</label>
-          <input type="number" id="transactionAmount" name="transactionAmount" [(ngModel)]="transactionAmount" required
-                 class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
-        </div>
-        <div>
-          <label for="transactionDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-          <input type="text" id="transactionDescription" name="transactionDescription" [(ngModel)]="transactionDescription"
-                 class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
-        </div>
-        <div>
-          <label for="transactionDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
-          <input type="date" id="transactionDate" name="transactionDate" [(ngModel)]="transactionDate" required
-                 class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
-        </div>
-        <div>
-          <label for="selectedCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
-          <select id="selectedCategory" name="selectedCategory" [(ngModel)]="selectedCategoryId" required
-                  class="mt-1 block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100">
-            <option [ngValue]="null" disabled selected>Select a category</option>
-            @if (categories$ | async; as categories) {
-              @for (category of categories; track category.id) {
-                <option [ngValue]="category.id">{{ category.name }}</option>
-              }
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-4xl font-extrabold mb-8">Transactions</h1>
+
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg mb-10">
+      <h2 class="text-2xl font-semibold mb-6">{{ editingTransactionId ? 'Edit' : 'Add New' }} Transaction</h2>
+      <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+
+        <div class="md:col-span-2">
+          <label class="block mb-2 text-sm font-medium">Category</label>
+          <select formControlName="category_id" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
+            <option [ngValue]="null" disabled>Select a {{ activeTab | titlecase }} Category</option>
+            @for(cat of filteredCategories; track cat.id) {
+              <option [value]="cat.id">{{ cat.name }}</option>
             }
           </select>
         </div>
-        @if (errorMessage) {
-          <div class="text-red-500 dark:text-red-400 text-sm font-semibold mt-4">
-            {{ errorMessage }}
-          </div>
-        }
-        <div class="flex justify-end space-x-4 mt-6">
-          <button type="button" (click)="onClose()"
-                  class="py-2 px-4 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
-            Cancel
+
+        <div>
+          <label class="block mb-2 text-sm font-medium">Amount (₪)</label>
+          <input type="number" formControlName="amount" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
+        </div>
+
+        <div>
+          <label class="block mb-2 text-sm font-medium">Date</label>
+          <input type="date" formControlName="transaction_date" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
+        </div>
+
+        <div class="flex items-end space-x-2">
+          <button type="submit" [disabled]="transactionForm.invalid" class="w-full py-2 px-4 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400">
+            {{ editingTransactionId ? 'Update' : 'Add' }}
           </button>
-          <button type="submit"
-                  class="py-2 px-4 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-            {{ isEditMode ? 'Save Changes' : 'Enter Transaction' }}
-          </button>
+          @if (editingTransactionId) {
+            <button type="button" (click)="cancelEdit()" class="py-2 px-4 rounded-lg font-bold bg-gray-200 dark:bg-gray-600 hover:bg-gray-300">
+              Cancel
+            </button>
+          }
         </div>
       </form>
+    </div>
+
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+    </div>
+
+    <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+      @if (filteredTransactions$ | async; as transactions) {
+        @if (transactions.length > 0) {
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead>
+            <tr>
+              <th class="px-6 py-3 text-left">Date</th>
+              <th class="px-6 py-3 text-left">Category</th>
+              <th class="px-6 py-3 text-right">Amount</th>
+              <th class="px-6 py-3 text-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+              @for (transaction of transactions; track transaction.id) {
+                @if ( (activeTab === 'income' && transaction.category?.type === 'Income') || (activeTab === 'expenses' && transaction.category?.type !== 'Income') ) {
+                  <tr>
+                    <td class="px-6 py-4">{{ transaction.transaction_date | date:'longDate' }}</td>
+                    <td class="px-6 py-4">{{ transaction.category?.name }}</td>
+                    <td class="px-6 py-4 text-right" [class.text-green-500]="transaction.category?.type === 'Income'">{{ transaction.amount | currency:'ILS':'symbol':'1.2-2' }}</td>
+                    <td class="px-6 py-4 text-right space-x-4">
+                      <button (click)="onEditTransaction(transaction)" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">Edit</button>
+                      <button (click)="onDeleteTransaction(transaction)" class="font-medium text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="text-center py-10"><p>No transactions found for this period.</p></div>
+        }
+      }
     </div>
   </div>
 </div>

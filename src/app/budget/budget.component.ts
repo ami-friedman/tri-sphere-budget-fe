@@ -1,10 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CategoryService, Category, CategoryType } from '../services/category.service';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map, switchMap, startWith } from 'rxjs/operators';
+import { CategoryService, Category } from '../services/category.service';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { map, switchMap, startWith, catchError } from 'rxjs/operators';
 import { CategoryModalComponent } from './category-modal/category-modal.component';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-budget',
@@ -52,6 +53,25 @@ export class BudgetComponent implements OnInit {
 
   onCategorySaved(): void {
     this.isModalOpen = false;
-    this.refresh$.next(); // Trigger a refresh
+    this.refresh$.next();
+  }
+
+  onDeleteCategory(category: Category): void {
+    if (confirm(`Are you sure you want to delete the category "${category.name}"? This cannot be undone.`)) {
+      this.categoryService.deleteCategory(category.id).pipe(
+        catchError((err: HttpErrorResponse) => {
+          if (err.status === 409) {
+            alert(err.error.detail);
+          } else {
+            alert('An unexpected error occurred. Please try again.');
+          }
+          return of(null);
+        })
+      ).subscribe(result => {
+        if (result !== null) {
+          this.refresh$.next();
+        }
+      });
+    }
   }
 }

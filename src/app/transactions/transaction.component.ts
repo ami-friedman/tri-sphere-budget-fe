@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
 import { map, startWith, switchMap } from 'rxjs/operators';
@@ -9,7 +9,7 @@ import { Category, CategoryService, CategoryType } from '../services/category.se
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe, TitleCasePipe],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe, TitleCasePipe],
   templateUrl: './transaction.component.html',
 })
 export class TransactionComponent implements OnInit {
@@ -21,12 +21,10 @@ export class TransactionComponent implements OnInit {
   private refresh$ = new BehaviorSubject<void>(undefined);
 
   transactionForm!: FormGroup;
+  editingTransactionId: string | null = null;
 
   allCategories: Category[] = [];
   filteredCategories: Category[] = [];
-
-  transactions$!: Observable<Transaction[]>;
-  // UPDATED: Use the new, more specific interface here
   filteredTransactions$!: Observable<TransactionWithCategory[]>;
 
   currentDate = new Date();
@@ -46,17 +44,17 @@ export class TransactionComponent implements OnInit {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth() + 1;
 
-    this.transactions$ = this.refresh$.pipe(
+    const transactions$ = this.refresh$.pipe(
       switchMap(() => this.transactionService.getTransactions(year, month))
     );
 
     this.categoryService.getCategories().subscribe(cats => {
       this.allCategories = cats;
-      this.setActiveTab(this.activeTab); // Set initial categories
+      this.setActiveTab(this.activeTab);
     });
 
     this.filteredTransactions$ = combineLatest([
-      this.transactions$.pipe(startWith([])),
+      transactions$.pipe(startWith([])),
       this.categoryService.getCategories().pipe(startWith([]))
     ]).pipe(
       map(([transactions, categories]) => {
@@ -64,7 +62,7 @@ export class TransactionComponent implements OnInit {
         return transactions.map(t => ({
           ...t,
           category: categoryMap.get(t.category_id)
-        })).filter(t => t.category) as TransactionWithCategory[]; // Ensure transaction has a valid category and cast to the new type
+        })).filter(t => t.category) as TransactionWithCategory[];
       })
     );
   }
@@ -75,30 +73,48 @@ export class TransactionComponent implements OnInit {
       this.filteredCategories = this.allCategories.filter(c => c.type === CategoryType.INCOME);
     } else {
       this.filteredCategories = this.allCategories.filter(c =>
-        c.type !== CategoryType.INCOME &&
-        c.type !== CategoryType.TRANSFER &&
-        c.type !== CategoryType.SAVINGS // Also exclude Savings from general expenses
+        c.type !== CategoryType.INCOME && c.type !== CategoryType.TRANSFER
       );
     }
+    this.cancelEdit();
+  }
+
+  onEditTransaction(transaction: TransactionWithCategory): void {
+    this.editingTransactionId = transaction.id;
+    this.transactionForm.patchValue({
+      category_id: transaction.category_id,
+      amount: transaction.amount,
+      transaction_date: transaction.transaction_date,
+      description: transaction.description,
+    });
+  }
+
+  cancelEdit(): void {
+    this.editingTransactionId = null;
     this.transactionForm.reset({
       transaction_date: this.formatDate(new Date())
     });
   }
 
-  getCategoryName(categoryId: string): string {
-    return this.allCategories.find(c => c.id === categoryId)?.name || 'Unknown';
+  onDeleteTransaction(transaction: TransactionWithCategory): void {
+    if (confirm(`Are you sure you want to delete this transaction?\n\n${transaction.category?.name}: ${transaction.amount}`)) {
+      this.transactionService.deleteTransaction(transaction.id).subscribe(() => {
+        this.refresh$.next();
+      });
+    }
   }
 
   onSubmit(): void {
-    if (this.transactionForm.invalid) {
-      return;
-    }
+    if (this.transactionForm.invalid) return;
+
     const formValue = this.transactionForm.value;
-    this.transactionService.createTransaction(formValue).subscribe(() => {
-      this.refresh$.next(); // Trigger a refresh
-      this.transactionForm.reset({
-        transaction_date: this.formatDate(new Date())
-      });
+    const apiCall = this.editingTransactionId
+      ? this.transactionService.updateTransaction(this.editingTransactionId, formValue)
+      : this.transactionService.createTransaction(formValue);
+
+    apiCall.subscribe(() => {
+      this.refresh$.next();
+      this.cancelEdit();
     });
   }
 
