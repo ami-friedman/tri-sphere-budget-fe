@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+// **FIX**: Import FormsModule for ngModel
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
 import { TransactionService, TransactionWithCategory } from '../services/transaction.service';
@@ -11,7 +12,8 @@ type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe],
+  // **FIX**: Add FormsModule to the imports array
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './transaction.component.html',
 })
 export class TransactionComponent implements OnInit {
@@ -19,20 +21,23 @@ export class TransactionComponent implements OnInit {
   private categoryService = inject(CategoryService);
   private fb = inject(FormBuilder);
 
-  // --- State Management ---
   transactionForm!: FormGroup;
   editingTransactionId: string | null = null;
 
-  private refresh$ = new BehaviorSubject<void>(undefined);
-  // **THIS IS THE FIX**: Removed the 'private' keyword.
+  private refreshData$ = new BehaviorSubject<{ year: number; month: number }>({
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1
+  });
   activeTab$ = new BehaviorSubject<TransactionTab>('monthly');
 
   allCategories: Category[] = [];
   filteredCategoriesForForm: Category[] = [];
-
   transactions$!: Observable<TransactionWithCategory[]>;
 
-  currentDate = new Date();
+  monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  availableYears = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
+  selectedMonthName: string = this.monthNames[new Date().getMonth()];
+  selectedYear: number = new Date().getFullYear();
 
   ngOnInit(): void {
     this.transactionForm = this.fb.group({
@@ -46,11 +51,8 @@ export class TransactionComponent implements OnInit {
   }
 
   loadInitialData(): void {
-    const year = this.currentDate.getFullYear();
-    const month = this.currentDate.getMonth() + 1;
-
-    const allTransactions$ = this.refresh$.pipe(
-      switchMap(() => this.transactionService.getTransactions(year, month))
+    const allTransactions$ = this.refreshData$.pipe(
+      switchMap(params => this.transactionService.getTransactions(params.year, params.month))
     );
 
     const allCategories$ = this.categoryService.getCategories().pipe(
@@ -64,7 +66,6 @@ export class TransactionComponent implements OnInit {
     ]).pipe(
       map(([transactions, categories, activeTab]) => {
         const categoryMap = new Map(categories.map(c => [c.id, c]));
-
         return transactions
           .map(t => ({ ...t, category: categoryMap.get(t.category_id) }))
           .filter(t => t.category && t.category.type.toLowerCase() === activeTab) as TransactionWithCategory[];
@@ -75,6 +76,31 @@ export class TransactionComponent implements OnInit {
       this.updateFilteredCategoriesForForm(tab);
       this.cancelEdit();
     });
+  }
+
+  onMonthChange(): void {
+    const monthIndex = this.monthNames.indexOf(this.selectedMonthName);
+    this.refreshData$.next({ year: this.selectedYear, month: monthIndex + 1 });
+  }
+
+  changeMonth(direction: 'prev' | 'next'): void {
+    let currentMonthIndex = this.monthNames.indexOf(this.selectedMonthName);
+    if (direction === 'next') {
+      if (currentMonthIndex === 11) {
+        this.selectedMonthName = this.monthNames[0];
+        this.selectedYear++;
+      } else {
+        this.selectedMonthName = this.monthNames[currentMonthIndex + 1];
+      }
+    } else {
+      if (currentMonthIndex === 0) {
+        this.selectedMonthName = this.monthNames[11];
+        this.selectedYear--;
+      } else {
+        this.selectedMonthName = this.monthNames[currentMonthIndex - 1];
+      }
+    }
+    this.onMonthChange();
   }
 
   updateFilteredCategoriesForForm(tab: TransactionTab): void {
@@ -111,7 +137,7 @@ export class TransactionComponent implements OnInit {
   onDeleteTransaction(transaction: TransactionWithCategory): void {
     if (confirm(`Are you sure you want to delete this transaction?\n\n${transaction.category?.name}: ${transaction.amount}`)) {
       this.transactionService.deleteTransaction(transaction.id).subscribe(() => {
-        this.refresh$.next();
+        this.onMonthChange();
       });
     }
   }
@@ -125,7 +151,7 @@ export class TransactionComponent implements OnInit {
       : this.transactionService.createTransaction(formValue);
 
     apiCall.subscribe(() => {
-      this.refresh$.next();
+      this.onMonthChange();
       this.cancelEdit();
     });
   }

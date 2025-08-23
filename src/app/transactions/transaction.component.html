@@ -1,6 +1,27 @@
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8">
   <div class="max-w-7xl mx-auto">
-    <h1 class="text-4xl font-extrabold mb-8">Transactions</h1>
+    <div class="flex flex-col md:flex-row items-center justify-between mb-8">
+      <h1 class="text-3xl md:text-4xl font-extrabold mb-4 md:mb-0">Transactions</h1>
+
+      <div class="flex items-center space-x-4">
+        <button (click)="changeMonth('prev')" class="py-1 px-3 rounded-lg text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
+          &lt;
+        </button>
+        <select [(ngModel)]="selectedMonthName" (change)="onMonthChange()" class="py-1 px-2 rounded-lg text-sm bg-white dark:bg-gray-800 border">
+          @for (month of monthNames; track month) {
+            <option [value]="month">{{ month }}</option>
+          }
+        </select>
+        <select [(ngModel)]="selectedYear" (change)="onMonthChange()" class="py-1 px-2 rounded-lg text-sm bg-white dark:bg-gray-800 border">
+          @for (year of availableYears; track year) {
+            <option [value]="year">{{ year }}</option>
+          }
+        </select>
+        <button (click)="changeMonth('next')" class="py-1 px-3 rounded-lg text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
+          &gt;
+        </button>
+      </div>
+    </div>
 
     <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg mb-10">
       <h2 class="text-2xl font-semibold mb-6">{{ editingTransactionId ? 'Edit' : 'Add New' }} Transaction</h2>
@@ -41,34 +62,6 @@
 
     <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
       <ul class="flex flex-wrap -mb-px font-medium text-center">
-        <li class="mr-2">
-          <button (click)="setActiveTab('income')"
-                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'income'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
-            Income
-          </button>
-        </li>
-        <li class="mr-2">
-          <button (click)="setActiveTab('cash')"
-                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'cash'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
-            Cash & Other
-          </button>
-        </li>
-        <li class="mr-2">
-          <button (click)="setActiveTab('monthly')"
-                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'monthly'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
-            Monthly Expenses
-          </button>
-        </li>
-        <li class="mr-2">
-          <button (click)="setActiveTab('savings')"
-                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'savings'}"
-                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
-            Savings
-          </button>
-        </li>
       </ul>
     </div>
 
@@ -77,23 +70,10 @@
         @if (transactions.length > 0) {
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead>
-            <tr>
-              <th class="px-6 py-3 text-left">Date</th>
-              <th class="px-6 py-3 text-left">Category</th>
-              <th class="px-6 py-3 text-right">Amount</th>
-              <th class="px-6 py-3 text-right">Actions</th>
-            </tr>
             </thead>
             <tbody>
               @for (transaction of transactions; track transaction.id) {
                 <tr>
-                  <td class="px-6 py-4">{{ transaction.transaction_date | date:'longDate' }}</td>
-                  <td class="px-6 py-4">{{ transaction.category?.name }}</td>
-                  <td class="px-6 py-4 text-right" [class.text-green-500]="transaction.category?.type === 'Income'">{{ transaction.amount | currency:'ILS':'symbol':'1.2-2' }}</td>
-                  <td class="px-6 py-4 text-right space-x-4">
-                    <button (click)="onEditTransaction(transaction)" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">Edit</button>
-                    <button (click)="onDeleteTransaction(transaction)" class="font-medium text-red-600 dark:text-red-400 hover:underline">Delete</button>
-                  </td>
                 </tr>
               }
             </tbody>
