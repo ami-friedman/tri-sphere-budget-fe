@@ -2,47 +2,26 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
-import { Category } from './category.service'; // Import Category
+import { Category } from './category.service';
 
-export interface Transaction {
-  id: string;
-  category_id: string;
-  amount: number;
-  description?: string;
-  transaction_date: string; // ISO 8601 format
-}
-
-// NEW: This interface represents a transaction bundled with its full category object.
-export interface TransactionWithCategory extends Transaction {
-  category?: Category;
-}
-
+// This interface is for creating/updating transactions
 export interface TransactionCreate {
+  account_id: string;
   category_id: string;
   amount: number;
   description?: string;
   transaction_date: string;
 }
 
-export interface TransactionUpdate {
-  category_id?: string;
-  amount?: number;
-  description?: string;
-  transaction_date?: string;
+// This is the full transaction object returned by the API
+export interface TransactionPublic extends TransactionCreate {
+  id: string;
+  created_at: string;
 }
 
-export interface TransferCreate {
-  category_id: string;
-  amount: number;
-  description?: string;
-  transaction_date: string;
-}
-
-export interface TransferUpdate {
-  category_id?: string;
-  amount?: number;
-  description?: string;
-  transaction_date?: string;
+// This is an enhanced type for use within the frontend components
+export interface TransactionWithCategory extends TransactionPublic {
+  category?: Category;
 }
 
 @Injectable({
@@ -52,53 +31,22 @@ export class TransactionService {
   private http = inject(HttpClient);
   private baseUrl = environment.baseUrl;
 
-  getTransactions(year: number, month: number): Observable<Transaction[]> {
-    let params = new HttpParams()
+  getTransactions(year: number, month: number): Observable<TransactionPublic[]> {
+    const params = new HttpParams()
       .set('year', year.toString())
       .set('month', month.toString());
-    return this.http.get<Transaction[]>(`${this.baseUrl}/transactions`, { params });
+    return this.http.get<TransactionPublic[]>(`${this.baseUrl}/transactions`, { params });
   }
 
-  createTransaction(transaction: TransactionCreate): Observable<Transaction> {
-    return this.http.post<Transaction>(
-      `${this.baseUrl}/transactions`,
-      transaction,
-    );
+  createTransaction(transaction: TransactionCreate): Observable<TransactionPublic> {
+    return this.http.post<TransactionPublic>(`${this.baseUrl}/transactions`, transaction);
   }
 
-  updateTransaction(
-    id: string,
-    transaction: TransactionUpdate,
-  ): Observable<Transaction> {
-    return this.http.put<Transaction>(
-      `${this.baseUrl}/transactions/${id}`,
-      transaction,
-    );
+  updateTransaction(id: string, transaction: Partial<TransactionCreate>): Observable<TransactionPublic> {
+    return this.http.put<TransactionPublic>(`${this.baseUrl}/transactions/${id}`, transaction);
   }
 
   deleteTransaction(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/transactions/${id}`);
-  }
-
-  getTransfers(year: number, month: number): Observable<Transaction[]> {
-    let params = new HttpParams()
-      .set('year', year.toString())
-      .set('month', month.toString());
-    return this.http.get<Transaction[]>(`${this.baseUrl}/transfers`, { params });
-  }
-
-  createTransfer(transfer: TransferCreate): Observable<Transaction> {
-    return this.http.post<Transaction>(`${this.baseUrl}/transfers`, transfer);
-  }
-
-  updateTransfer(id: string, transfer: TransferUpdate): Observable<Transaction> {
-    return this.http.put<Transaction>(
-      `${this.baseUrl}/transfers/${id}`,
-      transfer,
-    );
-  }
-
-  deleteTransfer(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/transfers/${id}`);
   }
 }

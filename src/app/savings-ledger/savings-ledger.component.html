@@ -1,0 +1,71 @@
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
+  @if (ledgerData$ | async; as data) {
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+        <h1 class="text-4xl font-extrabold mb-4 md:mb-0">Savings Ledger</h1>
+        <div class="text-right bg-white dark:bg-gray-800 px-6 py-4 rounded-xl shadow-lg">
+          <h2 class="text-gray-500 dark:text-gray-400 text-lg">Total Savings Balance</h2>
+          <p class="text-3xl font-bold text-green-600 dark:text-green-400">
+            {{ data.total_balance | currency:'ILS':'symbol':'1.2-2' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-semibold">Fund Balances</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Fund Name</th>
+              <th class="text-right py-3 px-4 uppercase font-semibold text-sm">Current Balance</th>
+            </tr>
+            </thead>
+            <tbody>
+              @for (fund of data.fund_balances; track fund.fund_name) {
+                <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-4 px-4 font-medium">{{ fund.fund_name }}</td>
+                  <td class="py-4 px-4 text-right font-medium text-blue-600 dark:text-blue-400">
+                    {{ fund.current_balance | currency:'ILS':'symbol':'1.2-2' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-semibold mb-4">Recent Activity</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Date</th>
+              <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Description</th>
+              <th class="text-right py-3 px-4 uppercase font-semibold text-sm">Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+              @for (activity of data.recent_activity; track activity.id) {
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                  <td class="py-4 px-4 text-gray-500 dark:text-gray-400">{{ activity.transaction_date | date:'longDate' }}</td>
+                  <td class="py-4 px-4 font-medium">{{ activity.description || 'Transaction' }}</td>
+                  <td class="py-4 px-4 text-right font-medium" [ngClass]="activity.amount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                    {{ activity.amount | currency:'ILS':'symbol':'1.2-2' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="text-center py-20">
+      <p>Loading savings data...</p>
+    </div>
+  }
+</div>

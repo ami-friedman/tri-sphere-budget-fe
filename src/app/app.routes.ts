@@ -4,43 +4,15 @@ import { RegisterComponent } from './auth/register.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { BudgetComponent } from './budget/budget.component';
 import { TransactionComponent } from './transactions/transaction.component';
-import { TransferComponent } from './transfers/transfer.component';
+import { SavingsLedgerComponent } from './savings-ledger/savings-ledger.component'; // New
 import { authGuard, publicGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
-  {
-    path: 'login',
-    component: LoginComponent,
-    canActivate: [publicGuard],
-  },
-  {
-    path: 'register',
-    component: RegisterComponent,
-    canActivate: [publicGuard],
-  },
-  {
-    path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'budget',
-    component: BudgetComponent,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'transactions',
-    component: TransactionComponent,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'transfers',
-    component: TransferComponent,
-    canActivate: [authGuard],
-  },
-  {
-    path: '',
-    redirectTo: '/dashboard',
-    pathMatch: 'full',
-  },
+  { path: 'login', component: LoginComponent, canActivate: [publicGuard] },
+  { path: 'register', component: RegisterComponent, canActivate: [publicGuard] },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+  { path: 'budget', component: BudgetComponent, canActivate: [authGuard] },
+  { path: 'transactions', component: TransactionComponent, canActivate: [authGuard] },
+  { path: 'savings-ledger', component: SavingsLedgerComponent, canActivate: [authGuard] }, // New
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
 ];
