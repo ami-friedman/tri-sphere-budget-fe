@@ -1,34 +1,52 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, TitleCasePipe } from '@angular/common';
+import { CommonModule, TitleCasePipe, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategoryService, Category } from '../services/category.service';
-import { Observable, BehaviorSubject, of } from 'rxjs';
+import { Observable, BehaviorSubject, of, forkJoin } from 'rxjs';
 import { map, switchMap, startWith, catchError } from 'rxjs/operators';
 import { CategoryModalComponent } from './category-modal/category-modal.component';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpClient } from '@angular/common/http';
+import { environment } from '../environments/environment';
+
+interface BudgetSummary {
+  income: number;
+  monthly: number;
+  cash: number;
+  savings: number;
+}
 
 @Component({
   selector: 'app-budget',
   standalone: true,
-  imports: [CommonModule, FormsModule, CategoryModalComponent, TitleCasePipe],
+  imports: [CommonModule, FormsModule, CategoryModalComponent, TitleCasePipe, CurrencyPipe],
   templateUrl: './budget.component.html',
 })
 export class BudgetComponent implements OnInit {
   activeTab: 'income' | 'cash' | 'monthly' | 'savings' = 'income';
 
   private categoryService = inject(CategoryService);
+  private http = inject(HttpClient);
+  private baseUrl = environment.baseUrl;
   private refresh$ = new BehaviorSubject<void>(undefined);
 
   categories$!: Observable<Category[]>;
   filteredCategories$!: Observable<Category[]>;
+  budgetSummary$!: Observable<BudgetSummary>;
 
   isModalOpen: boolean = false;
   selectedCategoryForEdit: Category | null = null;
 
   ngOnInit(): void {
-    this.categories$ = this.refresh$.pipe(
-      switchMap(() => this.categoryService.getCategories())
+    const allData$ = this.refresh$.pipe(
+      switchMap(() => forkJoin({
+        categories: this.categoryService.getCategories(),
+        summary: this.http.get<BudgetSummary>(`${this.baseUrl}/budget-summary`)
+      }))
     );
+
+    this.categories$ = allData$.pipe(map(data => data.categories));
+    this.budgetSummary$ = allData$.pipe(map(data => data.summary));
+
     this.updateFilteredCategories();
   }
 
