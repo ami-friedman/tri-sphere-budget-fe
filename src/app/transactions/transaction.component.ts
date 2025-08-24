@@ -5,6 +5,7 @@ import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
 import { TransactionService, TransactionWithCategory, TransactionCreate } from '../services/transaction.service';
 import { Category, CategoryService, CategoryType } from '../services/category.service';
+import { Account, AccountService } from '../services/account.service';
 
 type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
 
@@ -17,6 +18,7 @@ type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
 export class TransactionComponent implements OnInit {
   private transactionService = inject(TransactionService);
   private categoryService = inject(CategoryService);
+  private accountService = inject(AccountService);
   private fb = inject(FormBuilder);
 
   transactionForm!: FormGroup;
@@ -28,6 +30,7 @@ export class TransactionComponent implements OnInit {
   });
   activeTab$ = new BehaviorSubject<TransactionTab>('monthly');
 
+  accounts: Account[] = [];
   allCategories: Category[] = [];
   filteredCategoriesForForm: Category[] = [];
   transactions$!: Observable<TransactionWithCategory[]>;
@@ -38,8 +41,8 @@ export class TransactionComponent implements OnInit {
   selectedYear: number = new Date().getFullYear();
 
   ngOnInit(): void {
-    // **FIX**: Removed 'transaction_date' from the form group
     this.transactionForm = this.fb.group({
+      account_id: ['', Validators.required],
       category_id: ['', Validators.required],
       amount: [null, [Validators.required, Validators.min(0.01)]],
       description: [''],
@@ -49,6 +52,14 @@ export class TransactionComponent implements OnInit {
   }
 
   loadInitialData(): void {
+    this.accountService.getAccounts().subscribe(accs => {
+      this.accounts = accs;
+      const checkingAccount = this.accounts.find(a => a.type === 'Checking');
+      if (checkingAccount) {
+        this.transactionForm.patchValue({ account_id: checkingAccount.id });
+      }
+    });
+
     const allTransactions$ = this.refreshData$.pipe(
       switchMap(params => this.transactionService.getTransactions(params.year, params.month))
     );
@@ -118,6 +129,7 @@ export class TransactionComponent implements OnInit {
   onEditTransaction(transaction: TransactionWithCategory): void {
     this.editingTransactionId = transaction.id;
     this.transactionForm.patchValue({
+      account_id: transaction.account_id,
       category_id: transaction.category_id,
       amount: transaction.amount,
       description: transaction.description,
@@ -126,7 +138,10 @@ export class TransactionComponent implements OnInit {
 
   cancelEdit(): void {
     this.editingTransactionId = null;
-    this.transactionForm.reset();
+    const currentAccountId = this.transactionForm.get('account_id')?.value;
+    this.transactionForm.reset({
+      account_id: currentAccountId
+    });
   }
 
   onDeleteTransaction(transaction: TransactionWithCategory): void {
@@ -140,16 +155,16 @@ export class TransactionComponent implements OnInit {
   onSubmit(): void {
     if (this.transactionForm.invalid) return;
 
-    // **FIX**: Construct the transaction date from the picker
-    const monthIndex = this.monthNames.indexOf(this.selectedMonthName);
-    const transactionDate = new Date(this.selectedYear, monthIndex, 1);
+    // ** THIS IS THE FIX **
+    // Manually construct the date string to avoid timezone issues.
+    const monthIndex = this.monthNames.indexOf(this.selectedMonthName) + 1;
+    const monthString = monthIndex < 10 ? `0${monthIndex}` : monthIndex;
+    const transactionDateString = `${this.selectedYear}-${monthString}-01`;
 
     const formValue = this.transactionForm.value;
     const payload: TransactionCreate = {
       ...formValue,
-      transaction_date: this.formatDate(transactionDate),
-      // This is a placeholder for account_id, which we'll need to implement
-      account_id: '00000000-0000-0000-0000-000000000000'
+      transaction_date: transactionDateString,
     };
 
     const apiCall = this.editingTransactionId
