@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
@@ -12,7 +12,7 @@ type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe, TitleCasePipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe],
   templateUrl: './transaction.component.html',
 })
 export class TransactionComponent implements OnInit {
@@ -131,7 +131,7 @@ export class TransactionComponent implements OnInit {
     this.transactionForm.patchValue({
       account_id: transaction.account_id,
       category_id: transaction.category_id,
-      amount: transaction.amount,
+      amount: Math.abs(transaction.amount), // Ensure we edit a positive number
       description: transaction.description,
     });
   }
@@ -155,8 +155,6 @@ export class TransactionComponent implements OnInit {
   onSubmit(): void {
     if (this.transactionForm.invalid) return;
 
-    // ** THIS IS THE FIX **
-    // Manually construct the date string to avoid timezone issues.
     const monthIndex = this.monthNames.indexOf(this.selectedMonthName) + 1;
     const monthString = monthIndex < 10 ? `0${monthIndex}` : monthIndex;
     const transactionDateString = `${this.selectedYear}-${monthString}-01`;
@@ -175,6 +173,17 @@ export class TransactionComponent implements OnInit {
       this.onMonthChange();
       this.cancelEdit();
     });
+  }
+
+  // ** THIS FUNCTION IS FIXED **
+  onFundSavings(): void {
+    if (confirm(`This will create funding transactions for all your savings goals for ${this.selectedMonthName} ${this.selectedYear} based on your budget.\n\nAlready funded categories will be skipped. Continue?`)) {
+      this.transactionService.fundSavingsFromBudget(this.selectedYear, this.monthNames.indexOf(this.selectedMonthName) + 1)
+        .subscribe(response => {
+          alert(response.message);
+          this.onMonthChange();
+        });
+    }
   }
 
   private formatDate(date: Date): string {

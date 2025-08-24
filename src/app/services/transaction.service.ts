@@ -49,4 +49,8 @@ export class TransactionService {
   deleteTransaction(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/transactions/${id}`);
   }
+
+  fundSavingsFromBudget(year: number, month: number): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/transactions/fund-savings`, { year, month });
+  }
 }

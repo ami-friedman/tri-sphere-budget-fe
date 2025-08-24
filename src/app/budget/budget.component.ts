@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, TitleCasePipe, CurrencyPipe } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategoryService, Category } from '../services/category.service';
 import { Observable, BehaviorSubject, of, forkJoin } from 'rxjs';
@@ -18,7 +18,7 @@ interface BudgetSummary {
 @Component({
   selector: 'app-budget',
   standalone: true,
-  imports: [CommonModule, FormsModule, CategoryModalComponent, TitleCasePipe, CurrencyPipe],
+  imports: [CommonModule, FormsModule, CategoryModalComponent, CurrencyPipe],
   templateUrl: './budget.component.html',
 })
 export class BudgetComponent implements OnInit {
