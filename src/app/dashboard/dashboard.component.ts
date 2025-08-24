@@ -1,62 +1,63 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  DashboardService,
-  DashboardSummary,
-  MonthlyExpense,
-  SavingsBalance,
-} from '../services/dashboard.service';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { environment } from '../environments/environment';
+
+// Interface for the new summary data structure
+export interface BudgetActual {
+  budgeted: number;
+  actual: number;
+}
+
+export interface DashboardSummary {
+  income: BudgetActual;
+  monthly: BudgetActual;
+  cash: BudgetActual;
+  savings: BudgetActual;
+  total_expenses: BudgetActual;
+  net_cash_flow: BudgetActual;
+}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CurrencyPipe],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
-  dashboardSummary$!: Observable<DashboardSummary>;
+  private http = inject(HttpClient);
+  private baseUrl = environment.baseUrl;
 
-  monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
+  private refreshData$ = new BehaviorSubject<{ year: number; month: number }>({
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1
+  });
+
+  summary$!: Observable<DashboardSummary>;
+
+  // Date Picker Properties
+  monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  availableYears = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
   selectedMonthName: string = this.monthNames[new Date().getMonth()];
   selectedYear: number = new Date().getFullYear();
 
-  private dashboardService = inject(DashboardService);
-  private refreshDashboard$ = new BehaviorSubject<{
-    year: number;
-    month: number;
-  }>({ year: this.selectedYear, month: new Date().getMonth() + 1 });
-
   ngOnInit(): void {
-    this.dashboardSummary$ = this.refreshDashboard$.pipe(
-      switchMap((params) =>
-        this.dashboardService.getDashboardSummary(params.year, params.month),
-      ),
+    this.summary$ = this.refreshData$.pipe(
+      switchMap(params => {
+        const httpParams = new HttpParams()
+          .set('year', params.year.toString())
+          .set('month', params.month.toString());
+        return this.http.get<DashboardSummary>(`${this.baseUrl}/dashboard/summary`, { params: httpParams });
+      })
     );
   }
 
   onMonthChange(): void {
     const monthIndex = this.monthNames.indexOf(this.selectedMonthName);
-    this.refreshDashboard$.next({
-      year: this.selectedYear,
-      month: monthIndex + 1,
-    });
+    this.refreshData$.next({ year: this.selectedYear, month: monthIndex + 1 });
   }
 
   changeMonth(direction: 'prev' | 'next'): void {
@@ -77,13 +78,5 @@ export class DashboardComponent implements OnInit {
       }
     }
     this.onMonthChange();
-  }
-
-  isOverBudget(expense: MonthlyExpense): boolean {
-    return expense.actual_spent > expense.budgeted_amount;
-  }
-
-  isNegativeBalance(balance: SavingsBalance): boolean {
-    return balance.current_balance < 0;
   }
 }
