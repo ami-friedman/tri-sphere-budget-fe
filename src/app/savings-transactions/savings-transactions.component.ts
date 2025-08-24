@@ -1,16 +1,16 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs';
 import { map, startWith, switchMap, tap, filter } from 'rxjs/operators';
 import { TransactionService, TransactionWithCategory, TransactionCreate } from '../services/transaction.service';
 import { Category, CategoryService, CategoryType } from '../services/category.service';
-import { Account, AccountService } from '../services/account.service';
+import { AccountService } from '../services/account.service';
 
 @Component({
   selector: 'app-savings-transactions',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe, TitleCasePipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe],
   templateUrl: './savings-transactions.component.html',
 })
 export class SavingsTransactionsComponent implements OnInit {

@@ -1,18 +1,18 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, combineLatest, BehaviorSubject, of, forkJoin } from 'rxjs';
-import { map, startWith, switchMap, tap, filter } from 'rxjs/operators';
+import { map, startWith, switchMap } from 'rxjs/operators';
 import { TransactionService, TransactionWithCategory, TransactionCreate } from '../services/transaction.service';
 import { Category, CategoryService, CategoryType } from '../services/category.service';
-import { Account, AccountService } from '../services/account.service';
+import { AccountService } from '../services/account.service';
 
 type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
 
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe, TitleCasePipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe],
   templateUrl: './transaction.component.html',
 })
 export class TransactionComponent implements OnInit {
