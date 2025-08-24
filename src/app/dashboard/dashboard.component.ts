@@ -6,19 +6,32 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { environment } from '../environments/environment';
 
-// Interface for the new summary data structure
+// Interfaces for the new combined data structure
 export interface BudgetActual {
   budgeted: number;
   actual: number;
 }
 
-export interface DashboardSummary {
-  income: BudgetActual;
-  monthly: BudgetActual;
-  cash: BudgetActual;
-  savings: BudgetActual;
-  total_expenses: BudgetActual;
-  net_cash_flow: BudgetActual;
+export interface FundBalance {
+  fund_name: string;
+  current_balance: number;
+}
+
+export interface SavingsSummary {
+  total_balance: number;
+  fund_balances: FundBalance[];
+}
+
+export interface DashboardData {
+  checking_summary: {
+    income: BudgetActual;
+    monthly: BudgetActual;
+    cash: BudgetActual;
+    savings: BudgetActual;
+    total_expenses: BudgetActual;
+    net_cash_flow: BudgetActual;
+  };
+  savings_summary: SavingsSummary;
 }
 
 @Component({
@@ -36,21 +49,21 @@ export class DashboardComponent implements OnInit {
     month: new Date().getMonth() + 1
   });
 
-  summary$!: Observable<DashboardSummary>;
+  dashboardData$!: Observable<DashboardData>;
 
-  // Date Picker Properties
   monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   availableYears = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
   selectedMonthName: string = this.monthNames[new Date().getMonth()];
   selectedYear: number = new Date().getFullYear();
 
   ngOnInit(): void {
-    this.summary$ = this.refreshData$.pipe(
+    this.dashboardData$ = this.refreshData$.pipe(
       switchMap(params => {
         const httpParams = new HttpParams()
           .set('year', params.year.toString())
           .set('month', params.month.toString());
-        return this.http.get<DashboardSummary>(`${this.baseUrl}/dashboard/summary`, { params: httpParams });
+        // Call the new, combined endpoint
+        return this.http.get<DashboardData>(`${this.baseUrl}/dashboard/v2`, { params: httpParams });
       })
     );
   }
