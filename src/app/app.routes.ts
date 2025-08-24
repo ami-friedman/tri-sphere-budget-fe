@@ -4,8 +4,9 @@ import { RegisterComponent } from './auth/register.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { BudgetComponent } from './budget/budget.component';
 import { TransactionComponent } from './transactions/transaction.component';
-import { SavingsLedgerComponent } from './savings-ledger/savings-ledger.component'; // New
+// ** NEW: Import the new SavingsTransactionsComponent **
 import { authGuard, publicGuard } from './auth/auth.guard';
+import {SavingsTransactionsComponent} from './savings-transactions/savings-transactions.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, canActivate: [publicGuard] },
@@ -13,6 +14,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'budget', component: BudgetComponent, canActivate: [authGuard] },
   { path: 'transactions', component: TransactionComponent, canActivate: [authGuard] },
-  { path: 'savings-ledger', component: SavingsLedgerComponent, canActivate: [authGuard] }, // New
+  // ** NEW: Add the route for the savings ledger **
+  { path: 'savings-transactions', component: SavingsTransactionsComponent, canActivate: [authGuard] },
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
 ];

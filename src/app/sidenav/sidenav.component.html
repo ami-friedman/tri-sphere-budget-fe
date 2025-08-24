@@ -4,34 +4,19 @@
   </div>
   <ul class="flex-grow space-y-2 mt-8">
     <li>
-      <a routerLink="/dashboard" routerLinkActive="bg-blue-600 text-white shadow-lg" class="flex items-center p-3 rounded-lg font-medium text-gray-300 hover:bg-gray-700">
-        <!-- SVG icon -->
-        <span>Dashboard</span>
-      </a>
+      <a routerLink="/dashboard" routerLinkActive="bg-blue-600" class="flex items-center p-3 rounded-lg font-medium hover:bg-gray-700"><span>Dashboard</span></a>
     </li>
     <li>
-      <a routerLink="/budget" routerLinkActive="bg-blue-600 text-white shadow-lg" class="flex items-center p-3 rounded-lg font-medium text-gray-300 hover:bg-gray-700">
-        <!-- SVG icon -->
-        <span>Budget</span>
-      </a>
+      <a routerLink="/budget" routerLinkActive="bg-blue-600" class="flex items-center p-3 rounded-lg font-medium hover:bg-gray-700"><span>Budget</span></a>
     </li>
     <li>
-      <a routerLink="/transactions" routerLinkActive="bg-blue-600 text-white shadow-lg" class="flex items-center p-3 rounded-lg font-medium text-gray-300 hover:bg-gray-700">
-        <!-- SVG icon -->
-        <span>Transactions</span>
-      </a>
+      <a routerLink="/transactions" routerLinkActive="bg-blue-600" class="flex items-center p-3 rounded-lg font-medium hover:bg-gray-700"><span>Checking Transactions</span></a>
     </li>
     <li>
-      <a routerLink="/savings-ledger" routerLinkActive="bg-blue-600 text-white shadow-lg" class="flex items-center p-3 rounded-lg font-medium text-gray-300 hover:bg-gray-700">
-        <!-- SVG icon for savings -->
-        <span>Savings Ledger</span>
-      </a>
+      <a routerLink="/savings-transactions" routerLinkActive="bg-blue-600" class="flex items-center p-3 rounded-lg font-medium hover:bg-gray-700"><span>Savings Transactions</span></a>
     </li>
   </ul>
   <div class="mt-auto">
-    <button (click)="onLogout()" class="flex items-center w-full p-3 rounded-lg font-medium text-gray-300 hover:bg-gray-700">
-      <!-- SVG icon -->
-      <span>Logout</span>
-    </button>
+    <button (click)="onLogout()" class="flex items-center w-full p-3 rounded-lg font-medium hover:bg-gray-700"><span>Logout</span></button>
   </div>
 </nav>

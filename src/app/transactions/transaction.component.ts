@@ -1,8 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
-import { map, startWith, switchMap, tap } from 'rxjs/operators';
+import { Observable, combineLatest, BehaviorSubject, of, forkJoin } from 'rxjs';
+import { map, startWith, switchMap, tap, filter } from 'rxjs/operators';
 import { TransactionService, TransactionWithCategory, TransactionCreate } from '../services/transaction.service';
 import { Category, CategoryService, CategoryType } from '../services/category.service';
 import { Account, AccountService } from '../services/account.service';
@@ -12,7 +12,7 @@ type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe, TitleCasePipe],
   templateUrl: './transaction.component.html',
 })
 export class TransactionComponent implements OnInit {
@@ -23,14 +23,11 @@ export class TransactionComponent implements OnInit {
 
   transactionForm!: FormGroup;
   editingTransactionId: string | null = null;
+  checkingAccountId: string | null = null;
 
-  private refreshData$ = new BehaviorSubject<{ year: number; month: number }>({
-    year: new Date().getFullYear(),
-    month: new Date().getMonth() + 1
-  });
+  private refreshData$ = new BehaviorSubject<{ year: number; month: number }>({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
   activeTab$ = new BehaviorSubject<TransactionTab>('monthly');
 
-  accounts: Account[] = [];
   allCategories: Category[] = [];
   filteredCategoriesForForm: Category[] = [];
   transactions$!: Observable<TransactionWithCategory[]>;
@@ -42,39 +39,48 @@ export class TransactionComponent implements OnInit {
 
   ngOnInit(): void {
     this.transactionForm = this.fb.group({
-      account_id: ['', Validators.required],
       category_id: ['', Validators.required],
       amount: [null, [Validators.required, Validators.min(0.01)]],
       description: [''],
     });
-
     this.loadInitialData();
   }
 
   loadInitialData(): void {
-    this.accountService.getAccounts().subscribe(accs => {
-      this.accounts = accs;
-      const checkingAccount = this.accounts.find(a => a.type === 'Checking');
+    // **FIX**: Fetch accounts and categories first, in parallel.
+    forkJoin({
+      accounts: this.accountService.getAccounts(),
+      categories: this.categoryService.getCategories()
+    }).subscribe(({ accounts, categories }) => {
+      // Once data is here, populate our component properties
+      this.allCategories = categories;
+      const checkingAccount = accounts.find(a => a.type === 'Checking');
       if (checkingAccount) {
-        this.transactionForm.patchValue({ account_id: checkingAccount.id });
+        this.checkingAccountId = checkingAccount.id;
       }
+
+      // Now that we have the necessary IDs and lists, set up the dynamic observables
+      this.setupObservables();
+
+      // And trigger the initial tab state
+      this.activeTab$.next(this.activeTab$.value);
     });
+  }
 
+  setupObservables(): void {
     const allTransactions$ = this.refreshData$.pipe(
-      switchMap(params => this.transactionService.getTransactions(params.year, params.month))
-    );
-
-    const allCategories$ = this.categoryService.getCategories().pipe(
-      tap(cats => this.allCategories = cats)
+      switchMap(params => {
+        if (!this.checkingAccountId) return of([]);
+        return this.transactionService.getTransactions(params.year, params.month, this.checkingAccountId);
+      })
     );
 
     this.transactions$ = combineLatest([
       allTransactions$.pipe(startWith([])),
-      allCategories$.pipe(startWith([])),
       this.activeTab$
     ]).pipe(
-      map(([transactions, categories, activeTab]) => {
-        const categoryMap = new Map(categories.map(c => [c.id, c]));
+      map(([transactions, activeTab]) => {
+        const categoryMap = new Map(this.allCategories.map(c => [c.id, c]));
         return transactions
           .map(t => ({ ...t, category: categoryMap.get(t.category_id) }))
           .filter(t => t.category && t.category.type.toLowerCase() === activeTab) as TransactionWithCategory[];
@@ -87,10 +93,7 @@ export class TransactionComponent implements OnInit {
     });
   }
 
-  onMonthChange(): void {
-    const monthIndex = this.monthNames.indexOf(this.selectedMonthName);
-    this.refreshData$.next({ year: this.selectedYear, month: monthIndex + 1 });
-  }
+  onMonthChange(): void { this.refreshData$.next({ year: this.selectedYear, month: this.monthNames.indexOf(this.selectedMonthName) + 1 }); }
 
   changeMonth(direction: 'prev' | 'next'): void {
     let currentMonthIndex = this.monthNames.indexOf(this.selectedMonthName);
@@ -122,71 +125,38 @@ export class TransactionComponent implements OnInit {
     this.filteredCategoriesForForm = this.allCategories.filter(c => c.type === typeMap[tab]);
   }
 
-  setActiveTab(tab: TransactionTab): void {
-    this.activeTab$.next(tab);
-  }
+  setActiveTab(tab: TransactionTab): void { this.activeTab$.next(tab); }
 
-  onEditTransaction(transaction: TransactionWithCategory): void {
-    this.editingTransactionId = transaction.id;
+  onEditTransaction(tx: TransactionWithCategory): void {
+    this.editingTransactionId = tx.id;
     this.transactionForm.patchValue({
-      account_id: transaction.account_id,
-      category_id: transaction.category_id,
-      amount: Math.abs(transaction.amount), // Ensure we edit a positive number
-      description: transaction.description,
+      category_id: tx.category_id,
+      amount: Math.abs(tx.amount),
+      description: tx.description
     });
   }
 
-  cancelEdit(): void {
-    this.editingTransactionId = null;
-    const currentAccountId = this.transactionForm.get('account_id')?.value;
-    this.transactionForm.reset({
-      account_id: currentAccountId
-    });
-  }
+  cancelEdit(): void { this.editingTransactionId = null; this.transactionForm.reset(); }
 
-  onDeleteTransaction(transaction: TransactionWithCategory): void {
-    if (confirm(`Are you sure you want to delete this transaction?\n\n${transaction.category?.name}: ${transaction.amount}`)) {
-      this.transactionService.deleteTransaction(transaction.id).subscribe(() => {
-        this.onMonthChange();
-      });
+  onDeleteTransaction(tx: TransactionWithCategory): void {
+    if (confirm(`Are you sure you want to delete this transaction?`)) {
+      this.transactionService.deleteTransaction(tx.id).subscribe(() => this.onMonthChange());
     }
   }
 
   onSubmit(): void {
-    if (this.transactionForm.invalid) return;
-
+    if (this.transactionForm.invalid || !this.checkingAccountId) return;
     const monthIndex = this.monthNames.indexOf(this.selectedMonthName) + 1;
-    const monthString = monthIndex < 10 ? `0${monthIndex}` : monthIndex;
-    const transactionDateString = `${this.selectedYear}-${monthString}-01`;
-
-    const formValue = this.transactionForm.value;
-    const payload: TransactionCreate = {
-      ...formValue,
-      transaction_date: transactionDateString,
-    };
-
-    const apiCall = this.editingTransactionId
-      ? this.transactionService.updateTransaction(this.editingTransactionId, payload)
-      : this.transactionService.createTransaction(payload);
-
-    apiCall.subscribe(() => {
-      this.onMonthChange();
-      this.cancelEdit();
-    });
+    const dateStr = `${this.selectedYear}-${String(monthIndex).padStart(2, '0')}-01`;
+    const payload: TransactionCreate = { ...this.transactionForm.value, transaction_date: dateStr, account_id: this.checkingAccountId };
+    const apiCall = this.editingTransactionId ? this.transactionService.updateTransaction(this.editingTransactionId, payload) : this.transactionService.createTransaction(payload);
+    apiCall.subscribe(() => { this.onMonthChange(); this.cancelEdit(); });
   }
 
-  // ** THIS FUNCTION IS FIXED **
   onFundSavings(): void {
-    if (confirm(`This will create funding transactions for all your savings goals for ${this.selectedMonthName} ${this.selectedYear} based on your budget.\n\nAlready funded categories will be skipped. Continue?`)) {
+    if (confirm(`Fund savings goals for ${this.selectedMonthName} ${this.selectedYear}?`)) {
       this.transactionService.fundSavingsFromBudget(this.selectedYear, this.monthNames.indexOf(this.selectedMonthName) + 1)
-        .subscribe(response => {
-          alert(response.message);
-          this.onMonthChange();
-        });
+        .subscribe(res => { alert(res.message); this.onMonthChange(); });
     }
-  }
-
-  private formatDate(date: Date): string {
-    return date.toISOString().split('T')[0];
   }
 }

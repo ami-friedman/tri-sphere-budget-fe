@@ -31,10 +31,11 @@ export class TransactionService {
   private http = inject(HttpClient);
   private baseUrl = environment.baseUrl;
 
-  getTransactions(year: number, month: number): Observable<TransactionPublic[]> {
+  getTransactions(year: number, month: number, accountId: string): Observable<TransactionPublic[]> {
     const params = new HttpParams()
       .set('year', year.toString())
-      .set('month', month.toString());
+      .set('month', month.toString())
+      .set('account_id', accountId); // Pass the accountId as a query parameter
     return this.http.get<TransactionPublic[]>(`${this.baseUrl}/transactions`, { params });
   }
 
