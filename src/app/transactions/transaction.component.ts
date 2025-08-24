@@ -1,10 +1,9 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-// **FIX**: Import FormsModule for ngModel
+import { CommonModule, CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
-import { TransactionService, TransactionWithCategory } from '../services/transaction.service';
+import { TransactionService, TransactionWithCategory, TransactionCreate } from '../services/transaction.service';
 import { Category, CategoryService, CategoryType } from '../services/category.service';
 
 type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
@@ -12,8 +11,7 @@ type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  // **FIX**: Add FormsModule to the imports array
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe, TitleCasePipe],
   templateUrl: './transaction.component.html',
 })
 export class TransactionComponent implements OnInit {
@@ -40,10 +38,10 @@ export class TransactionComponent implements OnInit {
   selectedYear: number = new Date().getFullYear();
 
   ngOnInit(): void {
+    // **FIX**: Removed 'transaction_date' from the form group
     this.transactionForm = this.fb.group({
       category_id: ['', Validators.required],
       amount: [null, [Validators.required, Validators.min(0.01)]],
-      transaction_date: [this.formatDate(new Date()), Validators.required],
       description: [''],
     });
 
@@ -122,16 +120,13 @@ export class TransactionComponent implements OnInit {
     this.transactionForm.patchValue({
       category_id: transaction.category_id,
       amount: transaction.amount,
-      transaction_date: transaction.transaction_date,
       description: transaction.description,
     });
   }
 
   cancelEdit(): void {
     this.editingTransactionId = null;
-    this.transactionForm.reset({
-      transaction_date: this.formatDate(new Date())
-    });
+    this.transactionForm.reset();
   }
 
   onDeleteTransaction(transaction: TransactionWithCategory): void {
@@ -145,10 +140,21 @@ export class TransactionComponent implements OnInit {
   onSubmit(): void {
     if (this.transactionForm.invalid) return;
 
+    // **FIX**: Construct the transaction date from the picker
+    const monthIndex = this.monthNames.indexOf(this.selectedMonthName);
+    const transactionDate = new Date(this.selectedYear, monthIndex, 1);
+
     const formValue = this.transactionForm.value;
+    const payload: TransactionCreate = {
+      ...formValue,
+      transaction_date: this.formatDate(transactionDate),
+      // This is a placeholder for account_id, which we'll need to implement
+      account_id: '00000000-0000-0000-0000-000000000000'
+    };
+
     const apiCall = this.editingTransactionId
-      ? this.transactionService.updateTransaction(this.editingTransactionId, formValue)
-      : this.transactionService.createTransaction(formValue);
+      ? this.transactionService.updateTransaction(this.editingTransactionId, payload)
+      : this.transactionService.createTransaction(payload);
 
     apiCall.subscribe(() => {
       this.onMonthChange();
