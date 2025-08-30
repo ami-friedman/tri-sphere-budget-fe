@@ -1,0 +1,75 @@
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+      <h1 class="text-4xl font-extrabold mb-4 md:mb-0">Import Transactions</h1>
+      <label class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm cursor-pointer">
+        <span>Upload New Statement (CSV)</span>
+        <input type="file" (change)="onFileChange($event)" class="hidden" accept=".csv">
+      </label>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-2xl font-semibold">Review Transactions</h2>
+          <p class="text-gray-500 dark:text-gray-400">{{ pendingTransactions.length }} items awaiting review.</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button (click)="onIgnoreSelected()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg text-sm">
+            Ignore Selected
+          </button>
+          <button (click)="onFinalize()" [disabled]="isFinalizeDisabled" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
+            Finalize Import
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+        <ul class="flex flex-wrap -mb-px font-medium text-center">
+          <li class="mr-2">
+            <button (click)="setActiveTab('checking')" [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'checking'}" class="inline-block p-4 rounded-t-lg font-semibold">
+              Checking Account Expenses
+            </button>
+          </li>
+          <li class="mr-2">
+            <button (click)="setActiveTab('savings')" [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'savings'}" class="inline-block p-4 rounded-t-lg font-semibold">
+              Savings Account Expenses
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="border-b-2 border-gray-200 dark:border-gray-700">
+          <tr>
+            <th class="py-3 px-4 text-left"><input type="checkbox" class="rounded bg-gray-700 border-gray-600"></th>
+            <th class="py-3 px-4 text-left uppercase text-sm font-semibold text-gray-400">Description</th>
+            <th class="py-3 px-4 text-left uppercase text-sm font-semibold text-gray-400">Date</th>
+            <th class="py-3 px-4 text-right uppercase text-sm font-semibold text-gray-400">Amount</th>
+            <th class="py-3 px-4 text-left uppercase text-sm font-semibold text-gray-400 w-1/3">Assign Category</th>
+          </tr>
+          </thead>
+          <tbody>
+            @for(tx of pendingTransactions; track tx.id) {
+              <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="py-4 px-4"><input type="checkbox" [(ngModel)]="tx.selected" class="rounded bg-gray-700 border-gray-600"></td>
+                <td class="py-4 px-4 font-medium">{{ tx.statement_description }}</td>
+                <td class="py-4 px-4 text-gray-400">{{ tx.transaction_date | date:'longDate' }}</td>
+                <td class="py-4 px-4 text-right font-bold" [ngClass]="tx.amount >= 0 ? 'text-green-500' : 'text-red-500'">{{ tx.amount | currency:'ILS':'symbol':'1.2-2' }}</td>
+                <td class="py-4 px-4">
+                  <select [(ngModel)]="tx.assigned_category_id" class="w-full py-2 px-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+                    <option [ngValue]="null">-- Select Category --</option>
+                    @for(cat of availableCategories; track cat.id) {
+                      <option [value]="cat.id">{{ cat.name }} ({{cat.type}})</option>
+                    }
+                  </select>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
