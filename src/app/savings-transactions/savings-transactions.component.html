@@ -15,11 +15,12 @@
     </div>
 
     <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg mb-10">
-      <h2 class="text-2xl font-semibold mb-6">Record Spending from Savings</h2>
-      <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+      <h2 class="text-2xl font-semibold mb-6">{{ editingTransactionId ? 'Edit Expense' : 'Record Spending from Savings' }}</h2>
+      <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
         <div class="md:col-span-2">
           <label class="block mb-2 text-sm font-medium">For (Savings Category)</label>
           <select formControlName="category_id" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
+            <option [ngValue]="null" disabled>-- Select Fund --</option>
             @for(cat of savingsCategoriesForForm; track cat.id) {
               <option [value]="cat.id">{{ cat.name }}</option>
             }
@@ -30,13 +31,30 @@
           <input type="number" formControlName="amount" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
         </div>
         <div>
-          <button type="submit" [disabled]="transactionForm.invalid" class="w-full py-2 px-4 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700">Add Expense</button>
+          <label class="block mb-2 text-sm font-medium">Date</label>
+          <input type="date" formControlName="transaction_date" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
+        </div>
+        <div class="flex items-end space-x-2">
+          <button type="submit" [disabled]="transactionForm.invalid" class="w-full py-2 px-4 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400">
+            {{ editingTransactionId ? 'Update' : 'Add Expense' }}
+          </button>
+          @if (editingTransactionId) {
+            <button type="button" (click)="cancelEdit()" class="py-2 px-4 rounded-lg font-bold bg-gray-200 dark:bg-gray-600 hover:bg-gray-300">
+              Cancel
+            </button>
+          }
         </div>
       </form>
     </div>
 
     <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-      <h2 class="text-2xl font-semibold mb-4">Savings History for {{selectedMonthName}} {{selectedYear}}</h2>
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-semibold">Savings History for {{selectedMonthName}} {{selectedYear}}</h2>
+        <div class="text-right">
+          <h3 class="text-sm text-gray-500 dark:text-gray-400">Monthly Net</h3>
+          <p class="text-xl font-bold" [ngClass]="(totalBalance$ | async)! >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ (totalBalance$ | async) | currency:'ILS':'symbol':'1.2-2' }}</p>
+        </div>
+      </div>
       @if (transactions$ | async; as transactions) {
         @if (transactions.length > 0) {
           <table class="w-full">
@@ -45,14 +63,19 @@
               <th class="text-left py-3 px-4 uppercase text-sm">Date</th>
               <th class="text-left py-3 px-4 uppercase text-sm">Description</th>
               <th class="text-right py-3 px-4 uppercase text-sm">Amount</th>
+              <th class="text-right py-3 px-4 uppercase text-sm">Actions</th>
             </tr>
             </thead>
             <tbody>
               @for(tx of transactions; track tx.id) {
-                <tr class="border-b border-gray-200 dark:border-gray-700">
+                <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td class="py-4 px-4">{{ tx.transaction_date | date:'longDate' }}</td>
                   <td class="py-4 px-4">{{ tx.description || tx.category?.name }}</td>
                   <td class="py-4 px-4 text-right font-bold" [ngClass]="tx.amount >= 0 ? 'text-green-500' : 'text-red-500'">{{ tx.amount | currency:'ILS':'symbol':'1.2-2' }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                    <button (click)="onEditTransaction(tx)" class="text-blue-600 dark:text-blue-400 hover:underline">Edit</button>
+                    <button (click)="onDeleteTransaction(tx)" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                  </td>
                 </tr>
               }
             </tbody>

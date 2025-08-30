@@ -43,6 +43,8 @@ export class SavingsTransactionsComponent implements OnInit {
       category_id: ['', Validators.required],
       amount: [null, [Validators.required, Validators.min(0.01)]],
       description: [''],
+      // The date field for editing/creating savings expenses
+      transaction_date: [new Date().toISOString().split('T')[0], Validators.required]
     });
     this.loadInitialData();
   }
@@ -63,7 +65,6 @@ export class SavingsTransactionsComponent implements OnInit {
       })
     );
 
-    // Note: Total balance will now be for the selected month, could be changed later if needed
     this.totalBalance$ = allTransactions$.pipe(map(txs => txs.reduce((acc, tx) => acc + tx.amount, 0)));
 
     this.categoryService.getCategories().pipe(
@@ -75,8 +76,10 @@ export class SavingsTransactionsComponent implements OnInit {
 
     this.transactions$ = combineLatest([allTransactions$.pipe(startWith([])), of(this.allCategories)]).pipe(
       map(([transactions, categories]) => {
-        const categoryMap = new Map(categories.map(c => [c.id, c]));
-        return transactions.map(t => ({ ...t, category: categoryMap.get(t.category_id) })) as TransactionWithCategory[];
+        const categoryMap = new Map(this.allCategories.map(c => [c.id, c]));
+        // Sort transactions by date, most recent first
+        return transactions.map(t => ({ ...t, category: categoryMap.get(t.category_id) } as TransactionWithCategory))
+          .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime());
       })
     );
   }
@@ -89,37 +92,55 @@ export class SavingsTransactionsComponent implements OnInit {
   changeMonth(direction: 'prev' | 'next'): void {
     let currentMonthIndex = this.monthNames.indexOf(this.selectedMonthName);
     if (direction === 'next') {
-      if (currentMonthIndex === 11) {
-        this.selectedMonthName = this.monthNames[0];
-        this.selectedYear++;
-      } else {
-        this.selectedMonthName = this.monthNames[currentMonthIndex + 1];
-      }
+      if (currentMonthIndex === 11) { this.selectedMonthName = this.monthNames[0]; this.selectedYear++; }
+      else { this.selectedMonthName = this.monthNames[currentMonthIndex + 1]; }
     } else {
-      if (currentMonthIndex === 0) {
-        this.selectedMonthName = this.monthNames[11];
-        this.selectedYear--;
-      } else {
-        this.selectedMonthName = this.monthNames[currentMonthIndex - 1];
-      }
+      if (currentMonthIndex === 0) { this.selectedMonthName = this.monthNames[11]; this.selectedYear--; }
+      else { this.selectedMonthName = this.monthNames[currentMonthIndex - 1]; }
     }
     this.onMonthChange();
   }
 
-  cancelEdit(): void { this.editingTransactionId = null; this.transactionForm.reset(); }
-  onEditTransaction(tx: TransactionWithCategory): void { /* ... logic ... */ }
-  onDeleteTransaction(tx: TransactionWithCategory): void { /* ... logic ... */ }
+  cancelEdit(): void {
+    this.editingTransactionId = null;
+    this.transactionForm.reset({
+      transaction_date: new Date().toISOString().split('T')[0]
+    });
+  }
+
+  onEditTransaction(tx: TransactionWithCategory): void {
+    this.editingTransactionId = tx.id;
+    this.transactionForm.patchValue({
+      category_id: tx.category_id,
+      amount: Math.abs(tx.amount), // Edit the positive value
+      description: tx.description,
+      transaction_date: tx.transaction_date
+    });
+  }
+
+  onDeleteTransaction(tx: TransactionWithCategory): void {
+    if (confirm(`Are you sure you want to delete this transaction?\n\n${tx.category?.name}: ${tx.amount}`)) {
+      this.transactionService.deleteTransaction(tx.id).subscribe(() => {
+        this.onMonthChange();
+      });
+    }
+  }
 
   onSubmit(): void {
     if (this.transactionForm.invalid || !this.savingsAccountId) return;
 
-    const monthIndex = this.monthNames.indexOf(this.selectedMonthName) + 1;
-    const dateStr = `${this.selectedYear}-${String(monthIndex).padStart(2, '0')}-01`;
-
     const formValue = this.transactionForm.value;
-    const payload: TransactionCreate = { ...formValue, account_id: this.savingsAccountId, amount: -Math.abs(formValue.amount), transaction_date: dateStr };
+    // Spending from savings is always a negative amount
+    const payload: TransactionCreate = {
+      ...formValue,
+      account_id: this.savingsAccountId,
+      amount: -Math.abs(formValue.amount)
+    };
 
-    const apiCall = this.editingTransactionId ? this.transactionService.updateTransaction(this.editingTransactionId, payload) : this.transactionService.createTransaction(payload);
+    const apiCall = this.editingTransactionId
+      ? this.transactionService.updateTransaction(this.editingTransactionId, payload)
+      : this.transactionService.createTransaction(payload);
+
     apiCall.subscribe(() => { this.onMonthChange(); this.cancelEdit(); });
   }
 }
