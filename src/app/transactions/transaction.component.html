@@ -93,38 +93,13 @@
       </ul>
     </div>
 
-    <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-      @if (transactions$ | async; as transactions) {
-        @if (transactions.length > 0) {
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-              @for (transaction of transactions; track transaction.id) {
-                <tr>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ transaction.transaction_date | date:'longDate' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ transaction.category?.name }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold" [class.text-green-500]="transaction.category?.type === 'Income'">
-                    {{ transaction.amount | currency:'ILS':'symbol':'1.2-2' }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                    <button (click)="onEditTransaction(transaction)" class="text-blue-600 dark:text-blue-400 hover:underline">Edit</button>
-                    <button (click)="onDeleteTransaction(transaction)" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        } @else {
-          <div class="text-center py-10"><p>No transactions found for this period in this category.</p></div>
-        }
-      }
-    </div>
-  </div>
+    <ag-grid-angular
+      style="width: 100%; height: 600px;"
+      class="ag-theme-alpine-dark"
+      [rowData]="transactions$ | async"
+      [columnDefs]="colDefs"
+      [gridOptions]="gridOptions"
+      [domLayout]="'autoHeight'"
+      [suppressCellFocus]="true" />
+</div>
 </div>

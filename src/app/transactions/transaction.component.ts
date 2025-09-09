@@ -7,12 +7,16 @@ import { TransactionService, TransactionWithCategory, TransactionCreate } from '
 import { Category, CategoryService, CategoryType } from '../services/category.service';
 import { AccountService } from '../services/account.service';
 
+import { AgGridAngular } from 'ag-grid-angular';
+import { ColDef, GridOptions } from 'ag-grid-community';
+import { ActionsCellRenderer } from './actions-cell-renderer.component';
+
 type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
 
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe, AgGridAngular, ActionsCellRenderer],
   templateUrl: './transaction.component.html',
 })
 export class TransactionComponent implements OnInit {
@@ -32,6 +36,53 @@ export class TransactionComponent implements OnInit {
   filteredCategoriesForForm: Category[] = [];
   transactions$!: Observable<TransactionWithCategory[]>;
 
+  colDefs: ColDef[] = [
+    {
+      headerName: 'Date',
+      field: 'transaction_date',
+      sortable: true,
+      filter: 'agDateColumnFilter',
+      valueFormatter: p => new DatePipe('en-US').transform(p.value, 'longDate') || '',
+      flex: 2
+    },
+    {
+      headerName: 'Category',
+      field: 'category.name',
+      sortable: true,
+      filter: true,
+      flex: 2
+    },
+    {
+      headerName: 'Description',
+      field: 'description',
+      sortable: true,
+      filter: true,
+      flex: 3
+    },
+    {
+      headerName: 'Amount',
+      field: 'amount',
+      sortable: true,
+      filter: 'agNumberColumnFilter',
+      cellStyle: params => params.value >= 0 ? { color: '#22c55e' } : { color: '#ef4444' }, // Green for income, red for expense
+      valueFormatter: p => new CurrencyPipe('en-US', 'ILS').transform(p.value) || '',
+      type: 'rightAligned',
+      flex: 1
+    },
+    {
+      headerName: 'Actions',
+      cellRenderer: ActionsCellRenderer,
+      colId: 'actions',
+      flex: 1
+    }
+  ];
+
+  gridOptions: GridOptions = {
+    context: {
+      componentParent: this
+    }
+  };
+
   monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   availableYears = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
   selectedMonthName: string = this.monthNames[new Date().getMonth()];
@@ -47,24 +98,39 @@ export class TransactionComponent implements OnInit {
   }
 
   loadInitialData(): void {
-    // **FIX**: Fetch accounts and categories first, in parallel.
+    // ** SIMPLIFIED: No need to subscribe here, the grid will handle it **
     forkJoin({
       accounts: this.accountService.getAccounts(),
       categories: this.categoryService.getCategories()
     }).subscribe(({ accounts, categories }) => {
-      // Once data is here, populate our component properties
       this.allCategories = categories;
       const checkingAccount = accounts.find(a => a.type === 'Checking');
       if (checkingAccount) {
         this.checkingAccountId = checkingAccount.id;
+        this.setupTransactionObservable();
+        this.activeTab$.next(this.activeTab$.value); // Trigger initial filter
       }
-
-      // Now that we have the necessary IDs and lists, set up the dynamic observables
-      this.setupObservables();
-
-      // And trigger the initial tab state
-      this.activeTab$.next(this.activeTab$.value);
     });
+  }
+
+  setupTransactionObservable(): void {
+    const allTransactions$ = this.refreshData$.pipe(
+      switchMap(params => {
+        if (!this.checkingAccountId) return of([]);
+        return this.transactionService.getTransactions(params.year, params.month, this.checkingAccountId);
+      })
+    );
+
+    this.transactions$ = combineLatest([allTransactions$, this.activeTab$]).pipe(
+      map(([transactions, activeTab]) => {
+        const categoryMap = new Map(this.allCategories.map(c => [c.id, c]));
+        return transactions
+          .map(t => ({ ...t, category: categoryMap.get(t.category_id) }))
+          .filter(t => t.category && t.category.type.toLowerCase() === activeTab) as TransactionWithCategory[];
+      })
+    );
+
+    this.activeTab$.subscribe(tab => this.updateFilteredCategoriesForForm(tab));
   }
 
   setupObservables(): void {

@@ -30,7 +30,8 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/ag-grid-community/styles/ag-theme-alpine.css"
             ],
             "scripts": []
           },
