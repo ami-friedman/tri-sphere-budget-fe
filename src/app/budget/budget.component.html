@@ -1,112 +1,86 @@
-<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
+<div class="min-h-screen bg-gray-900 p-8 text-gray-100">
   <div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-4xl font-extrabold">Manage Your Budget</h1>
-      <!-- The "Add New Category" button has been moved from here -->
-    </div>
-
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Main Content: Tabs and Category List -->
+      <!-- Main Content: Tabs and Category Grid -->
       <div class="lg:col-span-2">
-        <!-- ** THIS SECTION IS UPDATED ** -->
-        <div class="mb-6 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+        <div class="mb-6 flex justify-between items-center border-b border-gray-700">
           <ul class="flex flex-wrap -mb-px font-medium text-center">
             <li class="mr-2">
-              <button (click)="setActiveTab('income')" [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'income'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 dark:hover:text-gray-300">
+              <button (click)="setActiveTab('income')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'income'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
                 Income
               </button>
             </li>
             <li class="mr-2">
-              <button (click)="setActiveTab('cash')" [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'cash'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 dark:hover:text-gray-300">
+              <button (click)="setActiveTab('cash')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'cash'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
                 Cash & Other
               </button>
             </li>
             <li class="mr-2">
-              <button (click)="setActiveTab('monthly')" [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'monthly'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 dark:hover:text-gray-300">
+              <button (click)="setActiveTab('monthly')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'monthly'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
                 Monthly Expenses
               </button>
             </li>
             <li class="mr-2">
-              <button (click)="setActiveTab('savings')" [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'savings'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 dark:hover:text-gray-300">
+              <button (click)="setActiveTab('savings')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'savings'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
                 Savings
               </button>
             </li>
           </ul>
-          <!-- The "Add New Category" button is now here -->
           <button (click)="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm mb-px">
             + Add New Category
           </button>
         </div>
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
-          @if (filteredCategories$ | async; as categories) {
-            @if (categories.length > 0) {
-              <table class="w-full">
-                <thead>
-                <tr class="border-b border-gray-200 dark:border-gray-700">
-                  <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Name</th>
-                  <th class="text-right py-3 px-4 uppercase font-semibold text-sm">Amount</th>
-                  <th class="text-right py-3 px-4 uppercase font-semibold text-sm">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                  @for (category of categories; track category.id) {
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                      <td class="py-4 px-4 font-medium">{{ category.name }}</td>
-                      <td class="py-4 px-4 text-right font-medium text-gray-700 dark:text-gray-300">{{ category.budgeted_amount | currency:'ILS':'symbol':'1.2-2' }}</td>
-                      <td class="py-4 px-4 text-right space-x-4">
-                        <button (click)="openModal(category)" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">Edit</button>
-                        <button (click)="onDeleteCategory(category)" class="font-medium text-red-600 dark:text-red-400 hover:underline">Delete</button>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            } @else {
-              <p class="text-center text-gray-500 dark:text-gray-400 py-10">No categories found for this type.</p>
-            }
-          }
-        </div>
+        <ag-grid-angular
+          style="width: 100%;"
+          class="ag-theme-alpine-dark"
+          [rowData]="filteredCategories$ | async"
+          [columnDefs]="colDefs"
+          [gridOptions]="gridOptions"
+          [domLayout]="'autoHeight'"
+          [suppressCellFocus]="true"
+        >
+        </ag-grid-angular>
       </div>
 
       <!-- Budget Summary Panel -->
       <div class="lg:col-span-1">
         @if(budgetSummary$ | async; as summary) {
-          <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg sticky top-8">
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg sticky top-8">
             <h2 class="text-2xl font-semibold mb-6 text-center">Budget Summary</h2>
             <div class="space-y-4">
-              <h3 class="text-lg font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 pb-2">Budgeted Outflows</h3>
-              <div class="flex justify-between items-center text-gray-700 dark:text-gray-300">
+              <h3 class="text-lg font-semibold text-gray-400 border-b border-gray-700 pb-2">Budgeted Outflows</h3>
+              <div class="flex justify-between items-center text-gray-300">
                 <span>Monthly Expenses</span>
                 <span class="font-medium">{{ summary.monthly | currency:'ILS':'symbol':'1.2-2' }}</span>
               </div>
-              <div class="flex justify-between items-center text-gray-700 dark:text-gray-300">
+              <div class="flex justify-between items-center text-gray-300">
                 <span>Cash & Other</span>
                 <span class="font-medium">{{ summary.cash | currency:'ILS':'symbol':'1.2-2' }}</span>
               </div>
-              <div class="flex justify-between items-center text-gray-700 dark:text-gray-300">
+              <div class="flex justify-between items-center text-gray-300">
                 <span>Savings Goals</span>
                 <span class="font-medium">{{ summary.savings | currency:'ILS':'symbol':'1.2-2' }}</span>
               </div>
-              <hr class="border-gray-200 dark:border-gray-700 my-4">
+              <hr class="border-gray-700 my-4">
               <div class="flex justify-between items-center font-semibold text-lg">
                 <span>Total Budgeted Expenses</span>
-                <span class="text-red-600 dark:text-red-400">{{ (summary.monthly + summary.cash + summary.savings) | currency:'ILS':'symbol':'1.2-2' }}</span>
+                <span class="text-red-400">{{ (summary.monthly + summary.cash + summary.savings) | currency:'ILS':'symbol':'1.2-2' }}</span>
               </div>
               <div class="flex justify-between items-center font-semibold text-lg mt-4">
                 <span>Total Expected Income</span>
-                <span class="text-green-600 dark:text-green-400">{{ summary.income | currency:'ILS':'symbol':'1.2-2' }}</span>
+                <span class="text-green-400">{{ summary.income | currency:'ILS':'symbol':'1.2-2' }}</span>
               </div>
-              <hr class="border-gray-200 dark:border-gray-700 my-4">
-              <div class="flex justify-between items-center font-bold text-xl p-4 rounded-lg" [ngClass]="(summary.income - (summary.monthly + summary.cash + summary.savings)) >= 0 ? 'bg-green-100 dark:bg-green-500/10' : 'bg-red-100 dark:bg-red-500/10'">
+              <hr class="border-gray-700 my-4">
+              <div class="flex justify-between items-center font-bold text-xl p-4 rounded-lg" [ngClass]="(summary.income - (summary.monthly + summary.cash + summary.savings)) >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'">
                 <span>Surplus / Deficit</span>
-                <span [ngClass]="(summary.income - (summary.monthly + summary.cash + summary.savings)) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                <span [ngClass]="(summary.income - (summary.monthly + summary.cash + summary.savings)) >= 0 ? 'text-green-400' : 'text-red-400'">
                                     {{ (summary.income - (summary.monthly + summary.cash + summary.savings)) | currency:'ILS':'symbol':'1.2-2' }}
                                 </span>
               </div>
             </div>
           </div>
         } @else {
-          <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg sticky top-8 text-center">
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg sticky top-8 text-center">
             <p>Loading summary...</p>
           </div>
         }
@@ -114,7 +88,13 @@
     </div>
 
     @if (isModalOpen) {
-      <app-category-modal [category]="selectedCategoryForEdit" [activeTab]="activeTab" (closeModal)="isModalOpen = false" (categorySaved)="onCategorySaved()"></app-category-modal>
+      <!-- ** THIS IS THE FIX ** -->
+      <app-category-modal
+        [category]="selectedCategoryForEdit"
+        [activeTab]="(activeTab$ | async)!"
+        (closeModal)="isModalOpen = false"
+        (categorySaved)="onCategorySaved()">
+      </app-category-modal>
     }
   </div>
 </div>
