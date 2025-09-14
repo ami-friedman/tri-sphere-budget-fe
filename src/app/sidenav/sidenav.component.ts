@@ -7,8 +7,7 @@ import { AuthService } from '../auth/auth.service';
   selector: 'app-sidenav',
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
-  templateUrl: './sidenav.component.html',
-  styleUrl: './sidenav.component.scss', // This file will be empty
+  templateUrl: './sidenav.component.html'
 })
 export class SidenavComponent {
   private authService = inject(AuthService);
