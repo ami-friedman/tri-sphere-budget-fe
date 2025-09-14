@@ -8,7 +8,7 @@
     inputStyleClass="p-calendar-input clickable"
     [ngModel]="selectedDate()"
     (ngModelChange)="selectedDate.set($event)"
-    (onSelect)="dateSelected.emit($event)" />
+    (onSelect)="dateSelected($event)" />
 
   <div role="none" class="pi pi-angle-double-right clickable" (click)="moveCalFwd()"></div>
 </div>

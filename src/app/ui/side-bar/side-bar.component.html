@@ -1,5 +1,11 @@
-<p-sidebar #sidebarRef [visible]="true">
-  <ng-template pTemplate="headless">
-  </ng-template>
-</p-sidebar>
-
+<div class="w-50 h-full">
+  <!-- Your sidebar content here -->
+  <div class="p-4">
+    <h2 class="text-lg font-semibold mb-4">Tri Sphere Budget</h2>
+    @for (menuItem of navigationMenu(); track $index) {
+      <div>
+        <a [href]="menuItem.route"> {{menuItem.title}} </a>
+      </div>
+    }
+  </div>
+</div>

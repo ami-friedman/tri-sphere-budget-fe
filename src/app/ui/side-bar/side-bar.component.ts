@@ -1,12 +1,23 @@
-import { Component } from '@angular/core';
-import { SidebarModule } from 'primeng/sidebar';
+import { Component, signal } from '@angular/core';
+import { NavigationItem } from './side-bar.interface';
 
 @Component({
-  selector: 'app-side-bar',
+  selector: 'side-bar',
   standalone: true,
-  imports: [SidebarModule],
+  imports: [],
 
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
 })
-export class SideBarComponent {}
+export class SideBarComponent {
+  navigationMenu = signal<NavigationItem[]>([
+    {
+      title: 'Home',
+      route: '',
+    },
+    {
+      title: 'Budget',
+      route: 'budget',
+    },
+  ]);
+}

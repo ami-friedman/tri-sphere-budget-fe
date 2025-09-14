@@ -1,8 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
-@import "tailwindcss";
-@import "primeicons/primeicons.css";
-@import "style-paths/general";
-@import "./style-paths/primeng/calendar";
-
-
-
+@use "tailwindcss";
+@use "primeicons/primeicons.css";
+@use "style-paths/general";
+@use "./style-paths/primeng/calendar";

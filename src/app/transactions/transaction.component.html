@@ -1,0 +1,105 @@
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row items-center justify-between mb-8">
+      <h1 class="text-3xl md:text-4xl font-extrabold mb-4 md:mb-0">Transactions</h1>
+
+      <div class="flex items-center space-x-4">
+        <button (click)="changeMonth('prev')" class="py-1 px-3 rounded-lg text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
+          &lt;
+        </button>
+        <select [(ngModel)]="selectedMonthName" (change)="onMonthChange()" class="py-1 px-2 rounded-lg text-sm bg-white dark:bg-gray-800 border">
+          @for (month of monthNames; track month) {
+            <option [value]="month">{{ month }}</option>
+          }
+        </select>
+        <select [(ngModel)]="selectedYear" (change)="onMonthChange()" class="py-1 px-2 rounded-lg text-sm bg-white dark:bg-gray-800 border">
+          @for (year of availableYears; track year) {
+            <option [value]="year">{{ year }}</option>
+          }
+        </select>
+        <button (click)="changeMonth('next')" class="py-1 px-3 rounded-lg text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
+          &gt;
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg mb-10">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold">{{ editingTransactionId ? 'Edit' : 'Add New' }} Transaction</h2>
+        <button (click)="onFundSavings()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
+          Fund Savings from Budget
+        </button>
+      </div>
+      <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+
+        <div class="md:col-span-2">
+          <label class="block mb-2 text-sm font-medium">Category</label>
+          <select formControlName="category_id" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
+            <option [ngValue]="null" disabled>Select a Category</option>
+            @for(cat of filteredCategoriesForForm; track cat.id) {
+              <option [value]="cat.id">{{ cat.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-2 text-sm font-medium">Amount (₪)</label>
+          <input type="number" formControlName="amount" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
+        </div>
+
+        <div class="flex items-end space-x-2">
+          <button type="submit" [disabled]="transactionForm.invalid" class="w-full py-2 px-4 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400">
+            {{ editingTransactionId ? 'Update' : 'Add' }}
+          </button>
+          @if (editingTransactionId) {
+            <button type="button" (click)="cancelEdit()" class="py-2 px-4 rounded-lg font-bold bg-gray-200 dark:bg-gray-600 hover:bg-gray-300">
+              Cancel
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+      <ul class="flex flex-wrap -mb-px font-medium text-center">
+        <li class="mr-2">
+          <button (click)="setActiveTab('income')"
+                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'income'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 dark:hover:text-gray-300">
+            Income
+          </button>
+        </li>
+        <li class="mr-2">
+          <button (click)="setActiveTab('cash')"
+                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'cash'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 dark:hover:text-gray-300">
+            Cash & Other
+          </button>
+        </li>
+        <li class="mr-2">
+          <button (click)="setActiveTab('monthly')"
+                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'monthly'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 dark:hover:text-gray-300">
+            Monthly Expenses
+          </button>
+        </li>
+        <li class="mr-2">
+          <button (click)="setActiveTab('savings')"
+                  [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': (activeTab$ | async) === 'savings'}"
+                  class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-600 dark:hover:text-gray-300">
+            Savings
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <ag-grid-angular
+      style="width: 100%; height: 600px;"
+      class="ag-theme-alpine-dark"
+      [rowData]="transactions$ | async"
+      [columnDefs]="colDefs"
+      [gridOptions]="gridOptions"
+      [domLayout]="'autoHeight'"
+      [suppressCellFocus]="true" />
+</div>
+</div>

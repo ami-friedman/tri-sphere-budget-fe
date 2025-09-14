@@ -1,0 +1,79 @@
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-4xl font-extrabold mb-8">Transactions</h1>
+
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg mb-10">
+      <h2 class="text-2xl font-semibold mb-6">{{ editingTransactionId ? 'Edit' : 'Add New' }} Transaction</h2>
+      <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+
+        <div class="md:col-span-2">
+          <label class="block mb-2 text-sm font-medium">Category</label>
+          <select formControlName="category_id" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
+            <option [ngValue]="null" disabled>Select a {{ activeTab | titlecase }} Category</option>
+            @for(cat of filteredCategories; track cat.id) {
+              <option [value]="cat.id">{{ cat.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-2 text-sm font-medium">Amount (₪)</label>
+          <input type="number" formControlName="amount" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
+        </div>
+
+        <div>
+          <label class="block mb-2 text-sm font-medium">Date</label>
+          <input type="date" formControlName="transaction_date" class="w-full py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700 border">
+        </div>
+
+        <div class="flex items-end space-x-2">
+          <button type="submit" [disabled]="transactionForm.invalid" class="w-full py-2 px-4 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400">
+            {{ editingTransactionId ? 'Update' : 'Add' }}
+          </button>
+          @if (editingTransactionId) {
+            <button type="button" (click)="cancelEdit()" class="py-2 px-4 rounded-lg font-bold bg-gray-200 dark:bg-gray-600 hover:bg-gray-300">
+              Cancel
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+    </div>
+
+    <div class="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+      @if (filteredTransactions$ | async; as transactions) {
+        @if (transactions.length > 0) {
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead>
+            <tr>
+              <th class="px-6 py-3 text-left">Date</th>
+              <th class="px-6 py-3 text-left">Category</th>
+              <th class="px-6 py-3 text-right">Amount</th>
+              <th class="px-6 py-3 text-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+              @for (transaction of transactions; track transaction.id) {
+                @if ( (activeTab === 'income' && transaction.category?.type === 'Income') || (activeTab === 'expenses' && transaction.category?.type !== 'Income') ) {
+                  <tr>
+                    <td class="px-6 py-4">{{ transaction.transaction_date | date:'longDate' }}</td>
+                    <td class="px-6 py-4">{{ transaction.category?.name }}</td>
+                    <td class="px-6 py-4 text-right" [class.text-green-500]="transaction.category?.type === 'Income'">{{ transaction.amount | currency:'ILS':'symbol':'1.2-2' }}</td>
+                    <td class="px-6 py-4 text-right space-x-4">
+                      <button (click)="onEditTransaction(transaction)" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">Edit</button>
+                      <button (click)="onDeleteTransaction(transaction)" class="font-medium text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="text-center py-10"><p>No transactions found for this period.</p></div>
+        }
+      }
+    </div>
+  </div>
+</div>

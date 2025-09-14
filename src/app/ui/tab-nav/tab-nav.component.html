@@ -1,7 +1,14 @@
-<p-tabView>
-  @for (item of tabs(); track item.title) {
-    <p-tabPanel [header]="item.title">
-      <ng-container *ngComponentOutlet="item.component; inputs: item.inputs"></ng-container>
-    </p-tabPanel>
-  }
-</p-tabView>
+<p-tabs>
+  <p-tablist>
+    @for (tab of tabs(); track tab.title) {
+      <p-tab>{{ tab.title }}</p-tab>
+    }
+  </p-tablist>
+  <p-tabpanels>
+    @for (tab of tabs(); track tab.component) {
+      <p-tabpanel>
+        <p class="m-0"><ng-container *ngComponentOutlet="tab.component; inputs: tab.inputs"></ng-container></p>
+      </p-tabpanel>
+    }
+  </p-tabpanels>
+</p-tabs>

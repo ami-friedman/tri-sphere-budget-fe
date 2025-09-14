@@ -1,3 +1,100 @@
-<div class="flex justify-center"><tsb-date-picker [date]="date()" /></div>
-<tsb-tab-nav [tabs]="tabs()" />
+<div class="min-h-screen bg-gray-900 p-8 text-gray-100">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Main Content: Tabs and Category Grid -->
+      <div class="lg:col-span-2">
+        <div class="mb-6 flex justify-between items-center border-b border-gray-700">
+          <ul class="flex flex-wrap -mb-px font-medium text-center">
+            <li class="mr-2">
+              <button (click)="setActiveTab('income')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'income'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
+                Income
+              </button>
+            </li>
+            <li class="mr-2">
+              <button (click)="setActiveTab('cash')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'cash'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
+                Cash & Other
+              </button>
+            </li>
+            <li class="mr-2">
+              <button (click)="setActiveTab('monthly')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'monthly'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
+                Monthly Expenses
+              </button>
+            </li>
+            <li class="mr-2">
+              <button (click)="setActiveTab('savings')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'savings'}" class="inline-block p-4 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
+                Savings
+              </button>
+            </li>
+          </ul>
+          <button (click)="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm mb-px">
+            + Add New Category
+          </button>
+        </div>
+        <ag-grid-angular
+          style="width: 100%;"
+          class="ag-theme-alpine-dark"
+          [rowData]="filteredCategories$ | async"
+          [columnDefs]="colDefs"
+          [gridOptions]="gridOptions"
+          [domLayout]="'autoHeight'"
+          [suppressCellFocus]="true"
+        >
+        </ag-grid-angular>
+      </div>
 
+      <!-- Budget Summary Panel -->
+      <div class="lg:col-span-1">
+        @if(budgetSummary$ | async; as summary) {
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg sticky top-8">
+            <h2 class="text-2xl font-semibold mb-6 text-center">Budget Summary</h2>
+            <div class="space-y-4">
+              <h3 class="text-lg font-semibold text-gray-400 border-b border-gray-700 pb-2">Budgeted Outflows</h3>
+              <div class="flex justify-between items-center text-gray-300">
+                <span>Monthly Expenses</span>
+                <span class="font-medium">{{ summary.monthly | currency:'ILS':'symbol':'1.2-2' }}</span>
+              </div>
+              <div class="flex justify-between items-center text-gray-300">
+                <span>Cash & Other</span>
+                <span class="font-medium">{{ summary.cash | currency:'ILS':'symbol':'1.2-2' }}</span>
+              </div>
+              <div class="flex justify-between items-center text-gray-300">
+                <span>Savings Goals</span>
+                <span class="font-medium">{{ summary.savings | currency:'ILS':'symbol':'1.2-2' }}</span>
+              </div>
+              <hr class="border-gray-700 my-4">
+              <div class="flex justify-between items-center font-semibold text-lg">
+                <span>Total Budgeted Expenses</span>
+                <span class="text-red-400">{{ (summary.monthly + summary.cash + summary.savings) | currency:'ILS':'symbol':'1.2-2' }}</span>
+              </div>
+              <div class="flex justify-between items-center font-semibold text-lg mt-4">
+                <span>Total Expected Income</span>
+                <span class="text-green-400">{{ summary.income | currency:'ILS':'symbol':'1.2-2' }}</span>
+              </div>
+              <hr class="border-gray-700 my-4">
+              <div class="flex justify-between items-center font-bold text-xl p-4 rounded-lg" [ngClass]="(summary.income - (summary.monthly + summary.cash + summary.savings)) >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'">
+                <span>Surplus / Deficit</span>
+                <span [ngClass]="(summary.income - (summary.monthly + summary.cash + summary.savings)) >= 0 ? 'text-green-400' : 'text-red-400'">
+                                    {{ (summary.income - (summary.monthly + summary.cash + summary.savings)) | currency:'ILS':'symbol':'1.2-2' }}
+                                </span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg sticky top-8 text-center">
+            <p>Loading summary...</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (isModalOpen) {
+      <!-- ** THIS IS THE FIX ** -->
+      <app-category-modal
+        [category]="selectedCategoryForEdit"
+        [activeTab]="(activeTab$ | async)!"
+        (closeModal)="isModalOpen = false"
+        (categorySaved)="onCategorySaved()">
+      </app-category-modal>
+    }
+  </div>
+</div>

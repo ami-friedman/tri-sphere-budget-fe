@@ -1,0 +1,110 @@
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
+  @if(dashboardData$ | async; as data) {
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+        <h1 class="text-4xl font-extrabold mb-4 md:mb-0">Dashboard</h1>
+        <div class="flex items-center space-x-4 text-lg bg-white dark:bg-gray-800 px-4 py-2 rounded-lg">
+          <button (click)="changeMonth('prev')" class="hover:text-black dark:hover:text-white text-gray-500 dark:text-gray-400">&lt;</button>
+          <select [(ngModel)]="selectedMonthName" (change)="onMonthChange()" class="font-semibold bg-transparent border-0 focus:ring-0">
+            @for (month of monthNames; track month) { <option [value]="month">{{ month }}</option> }
+          </select>
+          <select [(ngModel)]="selectedYear" (change)="onMonthChange()" class="font-semibold bg-transparent border-0 focus:ring-0">
+            @for (year of availableYears; track year) { <option [value]="year">{{ year }}</option> }
+          </select>
+          <button (click)="changeMonth('next')" class="hover:text-black dark:hover:text-white text-gray-500 dark:text-gray-400">&gt;</button>
+        </div>
+      </div>
+
+      <!-- ** THIS IS THE UPDATED LAYOUT ** -->
+      <div class="space-y-8">
+        <!-- Checking Account Performance -->
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+          <h2 class="text-2xl font-semibold mb-6 text-center">Checking Account: Monthly Performance</h2>
+          <div class="space-y-4">
+            <div class="flex justify-between items-center font-semibold text-lg">
+              <span>Income</span>
+              <div class="text-right">
+                <span class="text-green-600 dark:text-green-400">{{ data.checking_summary.income.actual | currency:'ILS':'symbol':'1.2-2' }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400 block">vs {{ data.checking_summary.income.budgeted | currency:'ILS':'symbol':'1.2-2' }} budgeted</span>
+              </div>
+            </div>
+            <hr class="border-gray-200 dark:border-gray-700 my-4">
+            <h3 class="text-lg font-semibold text-gray-500 dark:text-gray-400 pt-2">Expenses</h3>
+            <div class="flex justify-between items-center">
+              <span>Monthly Expenses</span>
+              <div class="text-right">
+                <span class="font-medium">{{ data.checking_summary.monthly.actual | currency:'ILS':'symbol':'1.2-2' }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400 block">vs {{ data.checking_summary.monthly.budgeted | currency:'ILS':'symbol':'1.2-2' }} budgeted</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center">
+              <span>Cash & Other</span>
+              <div class="text-right">
+                <span class="font-medium">{{ data.checking_summary.cash.actual | currency:'ILS':'symbol':'1.2-2' }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400 block">vs {{ data.checking_summary.cash.budgeted | currency:'ILS':'symbol':'1.2-2' }} budgeted</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center">
+              <span>Savings Funding</span>
+              <div class="text-right">
+                <span class="font-medium">{{ data.checking_summary.savings.actual | currency:'ILS':'symbol':'1.2-2' }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400 block">vs {{ data.checking_summary.savings.budgeted | currency:'ILS':'symbol':'1.2-2' }} budgeted</span>
+              </div>
+            </div>
+            <hr class="border-gray-200 dark:border-gray-700 my-2">
+            <div class="flex justify-between items-center font-semibold text-lg">
+              <span>Total Expenses</span>
+              <div class="text-right">
+                <span class="text-red-600 dark:text-red-400">{{ data.checking_summary.total_expenses.actual | currency:'ILS':'symbol':'1.2-2' }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400 block">vs {{ data.checking_summary.total_expenses.budgeted | currency:'ILS':'symbol':'1.2-2' }} budgeted</span>
+              </div>
+            </div>
+            <hr class="border-gray-200 dark:border-gray-700 my-4">
+            <div class="flex justify-between items-center font-bold text-xl p-4 rounded-lg" [ngClass]="data.checking_summary.net_cash_flow.actual >= 0 ? 'bg-green-100 dark:bg-green-500/10' : 'bg-red-100 dark:bg-red-500/10'">
+              <span>Net Cash Flow</span>
+              <div class="text-right">
+                                <span [ngClass]="data.checking_summary.net_cash_flow.actual >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                    {{ data.checking_summary.net_cash_flow.actual | currency:'ILS':'symbol':'1.2-2' }}
+                                </span>
+                <span class="text-xs text-gray-500 dark:text-gray-400 block">vs {{ data.checking_summary.net_cash_flow.budgeted | currency:'ILS':'symbol':'1.2-2' }} budgeted</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Savings Account Balances -->
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-semibold">Savings Balances</h2>
+            <div class="text-right">
+              <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ data.savings_summary.total_balance | currency:'ILS':'symbol':'1.2-2' }}</p>
+              <h3 class="text-sm text-gray-500 dark:text-gray-400">Total Saved</h3>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+              <tr class="border-b border-gray-200 dark:border-gray-700">
+                <th class="text-left py-3 px-2 uppercase font-semibold text-sm">Fund Name</th>
+                <th class="text-right py-3 px-2 uppercase font-semibold text-sm">Balance</th>
+              </tr>
+              </thead>
+              <tbody>
+                @for (fund of data.savings_summary.fund_balances; track fund.fund_name) {
+                  <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <td class="py-3 px-2 font-medium">{{ fund.fund_name }}</td>
+                    <td class="py-3 px-2 text-right font-medium text-blue-600 dark:text-blue-400">{{ fund.current_balance | currency:'ILS':'symbol':'1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="text-center py-20">
+      <p>Loading dashboard...</p>
+    </div>
+  }
+</div>
