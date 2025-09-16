@@ -24,18 +24,14 @@ export class ImportService {
   private http = inject(HttpClient);
   private baseUrl = environment.baseUrl;
 
-  // ** THIS METHOD IS FIXED **
   uploadStatement(file: File, accountType: 'checking' | 'savings'): Observable<{ message: string }> {
     const formData = new FormData();
     formData.append('file', file, file.name);
-    // Capitalize the first letter to match the backend enum ('checking' -> 'Checking')
     const capitalizedAccountType = accountType.charAt(0).toUpperCase() + accountType.slice(1);
     return this.http.post<{ message: string }>(`${this.baseUrl}/transactions/upload?account_type=${capitalizedAccountType}`, formData);
   }
 
-  // ** THIS METHOD IS FIXED **
   getPendingTransactions(accountType: 'checking' | 'savings'): Observable<PendingTransactionPublic[]> {
-    // Capitalize the first letter to match the backend enum
     const capitalizedAccountType = accountType.charAt(0).toUpperCase() + accountType.slice(1);
     return this.http.get<PendingTransactionPublic[]>(`${this.baseUrl}/transactions/pending?account_type=${capitalizedAccountType}`);
   }
@@ -46,5 +42,10 @@ export class ImportService {
 
   finalizeTransactions(payload: FinalizeTransactionPayload[]): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.baseUrl}/transactions/finalize`, payload);
+  }
+
+  clearPendingTransactions(accountType: 'checking' | 'savings'): Observable<{ message: string }> {
+    const capitalizedAccountType = accountType.charAt(0).toUpperCase() + accountType.slice(1);
+    return this.http.delete<{ message: string }>(`${this.baseUrl}/transactions/pending?account_type=${capitalizedAccountType}`);
   }
 }

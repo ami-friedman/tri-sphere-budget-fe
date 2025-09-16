@@ -6,7 +6,12 @@ import { switchMap } from 'rxjs/operators';
 import { Account, AccountService } from '../services/account.service';
 import { Category, CategoryService, CategoryType } from '../services/category.service';
 import { ImportService, PendingTransactionPublic } from '../services/import.service';
+import { AgGridAngular } from 'ag-grid-angular';
+import {ColDef, GridApi, GridOptions, GridReadyEvent} from 'ag-grid-community';
+import { CheckboxCellRenderer } from './checkbox-cell-renderer.component';
+import { CategorySelectRenderer } from './category-select-renderer.component';
 
+// UI-specific interface, extending the service interface
 interface PendingTransaction extends PendingTransactionPublic {
   selected: boolean;
   assigned_account_id: string | null;
@@ -16,13 +21,15 @@ interface PendingTransaction extends PendingTransactionPublic {
 @Component({
   selector: 'app-import-transactions',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe, AgGridAngular],
   templateUrl: './import-transactions.component.html',
 })
 export class ImportTransactionsComponent implements OnInit {
   private importService = inject(ImportService);
   private accountService = inject(AccountService);
   private categoryService = inject(CategoryService);
+  private gridApi!: GridApi;
+
 
   activeTab: 'checking' | 'savings' = 'checking';
   pendingTransactions: PendingTransaction[] = [];
@@ -37,30 +44,35 @@ export class ImportTransactionsComponent implements OnInit {
 
   private refresh$ = new BehaviorSubject<'checking' | 'savings'>('checking');
 
-  ngOnInit(): void {
-    this.loadInitialData();
-  }
+  colDefs: ColDef[] = [
+    { headerName: '', field: 'selected', cellRenderer: CheckboxCellRenderer, headerCheckboxSelection: true, checkboxSelection: true, flex: 0.5, minWidth: 50 },
+    { headerName: 'Description', field: 'statement_description', sortable: true, filter: true, flex: 3, minWidth: 200 },
+    { headerName: 'Date', field: 'transaction_date', sortable: true, filter: 'agDateColumnFilter', valueFormatter: p => new DatePipe('en-US').transform(p.value, 'longDate') || '', flex: 2, minWidth: 150 },
+    { headerName: 'Amount', field: 'amount', sortable: true, filter: 'agNumberColumnFilter', cellStyle: p => p.value >= 0 ? { color: '#22c55e' } : { color: '#ef4444' }, valueFormatter: p => new CurrencyPipe('en-US', 'ILS').transform(p.value) || '', type: 'rightAligned', flex: 1, minWidth: 120 },
+    { headerName: 'Assign Category', field: 'assigned_category_id', cellRenderer: CategorySelectRenderer, flex: 3, minWidth: 200 }
+  ];
+
+  gridOptions: GridOptions = { context: { componentParent: this }, rowSelection: 'multiple' };
+
+  ngOnInit(): void { this.loadInitialData(); }
 
   loadInitialData(): void {
     const data$ = this.refresh$.pipe(
       switchMap(activeTab => forkJoin({
-        // Point 2: Fetch pending transactions for the active tab ONLY
         pending: this.importService.getPendingTransactions(activeTab),
         accounts: this.accountService.getAccounts(),
         categories: this.categoryService.getCategories()
       }))
     );
-
     data$.subscribe(({ pending, accounts, categories }) => {
       this.accounts = accounts;
       this.checkingAccount = accounts.find(a => a.type === 'Checking');
       this.savingsAccount = accounts.find(a => a.type === 'Savings');
-
       this.allCategories = categories;
       this.checkingCategories = categories.filter(c => c.type === CategoryType.CASH || c.type === CategoryType.MONTHLY);
       this.savingsCategories = categories.filter(c => c.type === CategoryType.SAVINGS);
 
-      const defaultAccountId = (this.activeTab === 'checking' ? this.checkingAccount?.id : this.savingsAccount?.id) || null;
+      const defaultAccountId = this.getAccountIdForTab();
       this.pendingTransactions = pending.map(p => ({
         ...p,
         selected: false,
@@ -71,13 +83,9 @@ export class ImportTransactionsComponent implements OnInit {
   }
 
   onFileChange(event: Event): void {
-    const element = event.currentTarget as HTMLInputElement;
-    let fileList: FileList | null = element.files;
-    if (fileList && fileList.length > 0) {
-      // Point 2: Tell the backend which tab we're uploading for
-      this.importService.uploadStatement(fileList[0], this.activeTab).subscribe(() => {
-        this.refresh$.next(this.activeTab);
-      });
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      this.importService.uploadStatement(file, this.activeTab).subscribe(() => this.refresh$.next(this.activeTab));
     }
   }
 
@@ -91,34 +99,40 @@ export class ImportTransactionsComponent implements OnInit {
       }));
 
     if (toFinalize.length > 0) {
-      this.importService.finalizeTransactions(toFinalize).subscribe(() => {
-        this.refresh$.next(this.activeTab);
-      });
+      this.importService.finalizeTransactions(toFinalize).subscribe(() => this.refresh$.next(this.activeTab));
     }
   }
 
-  onIgnoreSelected(): void {
-    const toIgnore = this.pendingTransactions.filter(p => p.selected).map(p => p.id);
-    if (toIgnore.length > 0) {
-      this.importService.ignorePendingTransactions(toIgnore).subscribe(() => {
-        this.refresh$.next(this.activeTab);
-      });
+  onGridReady(params: GridReadyEvent) {
+    this.gridApi = params.api;
+  }
+
+  onDeleteSelected(): void {
+    // Get the selected rows directly from the grid's API
+    const selectedNodes = this.gridApi.getSelectedNodes();
+    const toDelete = selectedNodes.map(node => node.data.id);
+
+    if (toDelete.length > 0 && confirm(`Are you sure you want to delete ${toDelete.length} selected item(s)?`)) {
+      this.importService.ignorePendingTransactions(toDelete).subscribe(() => this.refresh$.next(this.activeTab));
     }
   }
 
-  // Point 1: Getter to disable the "Finalize" button
-  get isFinalizeDisabled(): boolean {
-    if (this.pendingTransactions.length === 0) return true;
-    // The button is disabled if even ONE transaction is not categorized AND not selected to be ignored.
-    return this.pendingTransactions.some(p => !p.assigned_category_id && !p.selected);
+  onClearAll(): void {
+    if (this.pendingTransactions.length > 0 && confirm(`Are you sure you want to clear all ${this.pendingTransactions.length} pending transactions?`)) {
+      this.importService.clearPendingTransactions(this.activeTab).subscribe(() => this.refresh$.next(this.activeTab));
+    }
   }
 
   get availableCategories(): Category[] {
     return this.activeTab === 'checking' ? this.checkingCategories : this.savingsCategories;
   }
 
+  getAccountIdForTab(): string | null {
+    return (this.activeTab === 'checking' ? this.checkingAccount?.id : this.savingsAccount?.id) || null;
+  }
+
   setActiveTab(tab: 'checking' | 'savings'): void {
     this.activeTab = tab;
-    this.refresh$.next(tab); // Trigger a refresh for the new tab
+    this.refresh$.next(tab);
   }
 }

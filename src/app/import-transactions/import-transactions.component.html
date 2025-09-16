@@ -1,74 +1,79 @@
-<div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
+<div class="min-h-screen bg-gray-900 p-4 md:p-8 text-gray-100">
   <div class="max-w-7xl mx-auto">
-    <div class="flex flex-col md:flex-row justify-between items-center mb-8">
-      <h1 class="text-4xl font-extrabold mb-4 md:mb-0">Import Transactions</h1>
-      <label class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm cursor-pointer">
-        <span>Upload New Statement (CSV)</span>
-        <input type="file" (change)="onFileChange($event)" class="hidden" accept=".csv">
-      </label>
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+      <h1 class="text-3xl md:text-4xl font-extrabold text-center md:text-left">Import Transactions</h1>
+
+      <div class="flex items-center space-x-4">
+        <div class="relative group">
+          <label class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-full text-sm cursor-pointer flex justify-center items-center transition-transform duration-200 hover:scale-110">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+            <input type="file" (change)="onFileChange($event)" class="hidden" accept=".csv">
+          </label>
+          <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-gray-700 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Upload CSV</div>
+        </div>
+
+        <div class="relative group">
+          <button (click)="onClearAll()" class="bg-red-600 hover:bg-red-700 text-white font-bold p-3 rounded-full text-sm transition-transform duration-200 hover:scale-110 cursor-pointer">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          </button>
+          <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-gray-700 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Clear All</div>
+        </div>
+      </div>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <h2 class="text-2xl font-semibold">Review Transactions</h2>
-          <p class="text-gray-500 dark:text-gray-400">{{ pendingTransactions.length }} items awaiting review.</p>
+    <div class="bg-gray-800 p-6 md:p-8 rounded-xl shadow-lg">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        <div class="text-center md:text-left">
+          <h2 class="text-xl md:text-2xl font-semibold">Review Transactions</h2>
+          <p class="text-gray-400 text-sm">{{ pendingTransactions.length }} items awaiting review.</p>
         </div>
+
+        <!-- ** THIS IS THE NEW, FIXED BUTTON GROUP ** -->
         <div class="flex items-center space-x-4">
-          <button (click)="onIgnoreSelected()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg text-sm">
-            Ignore Selected
-          </button>
-          <button (click)="onFinalize()" [disabled]="isFinalizeDisabled" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
-            Finalize Import
-          </button>
+          <!-- Delete Selected Icon Button -->
+          <div class="relative group">
+            <button (click)="onDeleteSelected()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold p-3 rounded-full text-sm transition-transform duration-200 hover:scale-110 disabled:bg-gray-500 disabled:cursor-not-allowed disabled:scale-100">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-gray-700 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Delete Selected</div>
+          </div>
+          <!-- Finalize Import Icon Button -->
+          <div class="relative group">
+            <button (click)="onFinalize()" class="bg-green-600 hover:bg-green-700 text-white font-bold p-3 rounded-full text-sm transition-transform duration-200 hover:scale-110 disabled:bg-gray-500 disabled:cursor-not-allowed disabled:scale-100">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </button>
+            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-gray-700 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Finalize Import</div>
+          </div>
         </div>
       </div>
 
-      <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
-        <ul class="flex flex-wrap -mb-px font-medium text-center">
+      <div class="mb-6 border-b border-gray-700">
+        <ul class="flex flex-wrap -mb-px font-medium text-center text-sm">
           <li class="mr-2">
-            <button (click)="setActiveTab('checking')" [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'checking'}" class="inline-block p-4 rounded-t-lg font-semibold">
-              Checking Account Expenses
+            <button (click)="setActiveTab('checking')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': activeTab === 'checking'}" class="inline-block p-3 rounded-t-lg font-semibold">
+              Checking Account
             </button>
           </li>
           <li class="mr-2">
-            <button (click)="setActiveTab('savings')" [ngClass]="{'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'savings'}" class="inline-block p-4 rounded-t-lg font-semibold">
-              Savings Account Expenses
+            <button (click)="setActiveTab('savings')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': activeTab === 'savings'}" class="inline-block p-3 rounded-t-lg font-semibold">
+              Savings Account
             </button>
           </li>
         </ul>
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead class="border-b-2 border-gray-200 dark:border-gray-700">
-          <tr>
-            <th class="py-3 px-4 text-left"><input type="checkbox" class="rounded bg-gray-700 border-gray-600"></th>
-            <th class="py-3 px-4 text-left uppercase text-sm font-semibold text-gray-400">Description</th>
-            <th class="py-3 px-4 text-left uppercase text-sm font-semibold text-gray-400">Date</th>
-            <th class="py-3 px-4 text-right uppercase text-sm font-semibold text-gray-400">Amount</th>
-            <th class="py-3 px-4 text-left uppercase text-sm font-semibold text-gray-400 w-1/3">Assign Category</th>
-          </tr>
-          </thead>
-          <tbody>
-            @for(tx of pendingTransactions; track tx.id) {
-              <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td class="py-4 px-4"><input type="checkbox" [(ngModel)]="tx.selected" class="rounded bg-gray-700 border-gray-600"></td>
-                <td class="py-4 px-4 font-medium">{{ tx.statement_description }}</td>
-                <td class="py-4 px-4 text-gray-400">{{ tx.transaction_date | date:'longDate' }}</td>
-                <td class="py-4 px-4 text-right font-bold" [ngClass]="tx.amount >= 0 ? 'text-green-500' : 'text-red-500'">{{ tx.amount | currency:'ILS':'symbol':'1.2-2' }}</td>
-                <td class="py-4 px-4">
-                  <select [(ngModel)]="tx.assigned_category_id" class="w-full py-2 px-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
-                    <option [ngValue]="null">-- Select Category --</option>
-                    @for(cat of availableCategories; track cat.id) {
-                      <option [value]="cat.id">{{ cat.name }} ({{cat.type}})</option>
-                    }
-                  </select>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <ag-grid-angular
+          style="width: 100%; min-width: 800px;"
+          class="ag-theme-alpine-dark"
+          [rowData]="pendingTransactions"
+          [columnDefs]="colDefs"
+          [gridOptions]="gridOptions"
+          [domLayout]="'autoHeight'"
+          [suppressCellFocus]="true"
+          (gridReady)="onGridReady($event)"
+        >
+        </ag-grid-angular>
       </div>
     </div>
   </div>
