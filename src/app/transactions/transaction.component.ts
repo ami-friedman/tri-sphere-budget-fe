@@ -38,26 +38,11 @@ export class TransactionComponent implements OnInit {
 
   colDefs: ColDef[] = [
     {
-      headerName: 'Date',
-      field: 'transaction_date',
-      sortable: true,
-      filter: 'agDateColumnFilter',
-      valueFormatter: p => new DatePipe('en-US').transform(p.value, 'longDate') || '',
-      flex: 2
-    },
-    {
       headerName: 'Category',
       field: 'category.name',
       sortable: true,
       filter: true,
       flex: 2
-    },
-    {
-      headerName: 'Description',
-      field: 'description',
-      sortable: true,
-      filter: true,
-      flex: 3
     },
     {
       headerName: 'Amount',
@@ -68,6 +53,21 @@ export class TransactionComponent implements OnInit {
       valueFormatter: p => new CurrencyPipe('en-US', 'ILS').transform(p.value) || '',
       type: 'rightAligned',
       flex: 1
+    },
+    {
+      headerName: 'Date',
+      field: 'transaction_date',
+      sortable: true,
+      filter: 'agDateColumnFilter',
+      valueFormatter: p => new DatePipe('en-US').transform(p.value, 'longDate') || '',
+      flex: 2
+    },
+    {
+      headerName: 'Description',
+      field: 'description',
+      sortable: true,
+      filter: true,
+      flex: 3
     },
     {
       headerName: 'Actions',
