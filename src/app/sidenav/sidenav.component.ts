@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import {Component, inject, output} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
@@ -12,9 +12,14 @@ import { AuthService } from '../auth/auth.service';
 export class SidenavComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  navigated = output();
 
   onLogout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  onNavLinkClick(): void {
+    this.navigated.emit();
   }
 }

@@ -16,7 +16,7 @@ type TransactionTab = 'income' | 'cash' | 'monthly' | 'savings';
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, CurrencyPipe, DatePipe, AgGridAngular, ActionsCellRenderer],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, AgGridAngular],
   templateUrl: './transaction.component.html',
 })
 export class TransactionComponent implements OnInit {

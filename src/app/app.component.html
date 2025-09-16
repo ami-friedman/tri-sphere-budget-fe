@@ -1,7 +1,41 @@
-<div class="flex h-screen">
-  <app-sidenav class="w-64 flex-shrink-0"></app-sidenav>
+<div class="flex h-screen bg-gray-900 text-gray-100">
+  <!-- Desktop Sidenav -->
+  <div class="hidden md:flex md:flex-shrink-0 w-64">
+    <app-sidenav></app-sidenav>
+  </div>
 
-  <main class="flex-grow overflow-y-auto">
-    <router-outlet></router-outlet>
-  </main>
+  <div class="flex flex-col flex-1 w-0 overflow-hidden">
+    <!-- Mobile Header -->
+    <div class="relative z-10 flex-shrink-0 flex h-16 bg-gray-800 shadow md:hidden">
+      <button (click)="toggleSidenav()" type="button" class="px-4 border-r border-gray-700 text-gray-400 focus:outline-none">
+        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
+      <div class="flex-1 px-4 flex justify-between items-center">
+        <span class="text-xl font-bold text-blue-400">Tri-Sphere</span>
+      </div>
+    </div>
+
+    <!-- Mobile Sidenav -->
+    @if (isSidenavOpen) {
+      <div class="fixed inset-0 z-40 flex md:hidden" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-75" (click)="toggleSidenav()"></div>
+        <div class="relative flex-1 flex flex-col max-w-xs w-full bg-gray-800">
+          <div class="absolute top-0 right-0 -mr-12 pt-2">
+            <button (click)="toggleSidenav()" type="button" class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none">
+              <svg class="h-6 w-6 text-white" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+          <!-- ** UPDATED: Listen for the (navigated) event and call closeSidenav() ** -->
+          <app-sidenav (navigated)="closeSidenav()"></app-sidenav>
+        </div>
+      </div>
+    }
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative z-0 overflow-y-auto focus:outline-none">
+      <div class="py-6 px-4 sm:px-6 lg:px-8">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
 </div>

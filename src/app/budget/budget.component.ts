@@ -17,7 +17,7 @@ type BudgetTab = 'income' | 'cash' | 'monthly' | 'savings';
 @Component({
   selector: 'app-budget',
   standalone: true,
-  imports: [CommonModule, FormsModule, CategoryModalComponent, TitleCasePipe, CurrencyPipe, AgGridAngular],
+  imports: [CommonModule, FormsModule, CategoryModalComponent, CurrencyPipe, AgGridAngular],
   templateUrl: './budget.component.html',
 })
 export class BudgetComponent implements OnInit {
