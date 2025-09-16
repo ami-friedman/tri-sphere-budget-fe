@@ -28,12 +28,12 @@
           </ul>
           <button (click)="openModal()" class="w-full sm:w-auto mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-sm mb-px flex items-center justify-center">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-            <span class="sm:inline ml-2">Add New</span>
+            <span class="hidden sm:inline ml-2">Add New</span>
           </button>
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto bg-gray-800 rounded-xl">
           <ag-grid-angular
-            style="width: 100%; min-width: 300px;"
+            style="width: 100%; min-width: 500px;"
             class="ag-theme-alpine-dark"
             [rowData]="filteredCategories$ | async"
             [columnDefs]="colDefs"
