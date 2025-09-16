@@ -1,27 +1,30 @@
-<div class="min-h-screen bg-gray-900 p-8">
+<div class="min-h-screen bg-gray-900 p-4 md:p-8 text-gray-100">
   <div class="max-w-7xl mx-auto">
+    <!-- ** THIS IS THE NEW RESPONSIVE HEADER ** -->
     <div class="flex flex-col md:flex-row justify-between items-center mb-8">
-      <h1 class="text-4xl font-extrabold mb-4 md:mb-0">Savings Transactions</h1>
-      <div class="flex items-center space-x-4">
-        <button (click)="changeMonth('prev')" class="py-1 px-3 rounded-lg text-sm bg-gray-700 hover:bg-gray-600">&lt;</button>
-        <select [(ngModel)]="selectedMonthName" (change)="onMonthChange()" class="py-1 px-2 rounded-lg text-sm bg-gray-800 border border-gray-700">
+      <h1 class="text-3xl md:text-4xl font-extrabold mb-4 md:mb-0">Savings Transactions</h1>
+      <div class="flex items-center space-x-2 bg-gray-800 px-2 py-1 rounded-lg">
+        <button (click)="changeMonth('prev')" class="p-2 rounded-md hover:bg-gray-700 text-gray-400">&lt;</button>
+        <select [(ngModel)]="selectedMonthName" (change)="onMonthChange()" class="font-semibold bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
           @for (month of monthNames; track month) { <option [value]="month">{{ month }}</option> }
         </select>
-        <select [(ngModel)]="selectedYear" (change)="onMonthChange()" class="py-1 px-2 rounded-lg text-sm bg-gray-800 border border-gray-700">
+        <select [(ngModel)]="selectedYear" (change)="onMonthChange()" class="font-semibold bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
           @for (year of availableYears; track year) { <option [value]="year">{{ year }}</option> }
         </select>
-        <button (click)="changeMonth('next')" class="py-1 px-3 rounded-lg text-sm bg-gray-700 hover:bg-gray-600">&gt;</button>
+        <button (click)="changeMonth('next')" class="p-2 rounded-md hover:bg-gray-700 text-gray-400">&gt;</button>
       </div>
     </div>
 
-    <div class="bg-gray-800 p-8 rounded-2xl shadow-lg mb-10">
-      <h2 class="text-2xl font-semibold mb-6">{{ editingTransactionId ? 'Edit Expense' : 'Record Spending from Savings' }}</h2>
+    <div class="bg-gray-800 p-6 md:p-8 rounded-xl shadow-lg mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold mb-6">{{ editingTransactionId ? 'Edit Expense' : 'Record Spending from Savings' }}</h2>
       <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
         <div class="md:col-span-2">
-          <label for="savings_category" class="block mb-2 text-sm font-medium">For (Savings Category)</label>
+          <label for="savings_category" class="block mb-2 text-sm font-medium">For (Savings Fund)</label>
           <select id="savings_category" formControlName="category_id" class="w-full py-2 px-3 rounded-lg bg-gray-700 border border-gray-600">
             <option [ngValue]="null" disabled>-- Select Fund --</option>
-            @for(cat of savingsCategoriesForForm; track cat.id) { <option [value]="cat.id">{{ cat.name }}</option> }
+            @for(cat of savingsCategoriesForForm; track cat.id) {
+              <option [value]="cat.id">{{ cat.name }}</option>
+            }
           </select>
         </div>
         <div>
@@ -37,21 +40,34 @@
             {{ editingTransactionId ? 'Update' : 'Add Expense' }}
           </button>
           @if (editingTransactionId) {
-            <button type="button" (click)="cancelEdit()" class="py-2 px-4 rounded-lg font-bold bg-gray-600 hover:bg-gray-500">Cancel</button>
+            <button type="button" (click)="cancelEdit()" class="py-2 px-4 rounded-lg font-bold bg-gray-600 hover:bg-gray-500">
+              Cancel
+            </button>
           }
         </div>
       </form>
     </div>
 
-    <ag-grid-angular
-      style="width: 100%;"
-      class="ag-theme-alpine-dark"
-      [rowData]="transactions$ | async"
-      [columnDefs]="colDefs"
-      [gridOptions]="gridOptions"
-      [domLayout]="'autoHeight'"
-      [suppressCellFocus]="true"
-    >
-    </ag-grid-angular>
+    <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+      <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+        <h2 class="text-xl md:text-2xl font-semibold mb-2 sm:mb-0">History for {{selectedMonthName}} {{selectedYear}}</h2>
+        <div class="text-right">
+          <h3 class="text-sm text-gray-400">Monthly Net Flow</h3>
+          <p class="text-xl font-bold" [ngClass]="(totalBalance$ | async)! >= 0 ? 'text-green-400' : 'text-red-400'">{{ (totalBalance$ | async) | currency:'ILS':'symbol':'1.2-2' }}</p>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <ag-grid-angular
+          style="width: 100%; min-width: 600px;"
+          class="ag-theme-alpine-dark"
+          [rowData]="transactions$ | async"
+          [columnDefs]="colDefs"
+          [gridOptions]="gridOptions"
+          [domLayout]="'autoHeight'"
+          [suppressCellFocus]="true"
+        >
+        </ag-grid-angular>
+      </div>
+    </div>
   </div>
 </div>
