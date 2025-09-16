@@ -1,9 +1,11 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, computed, effect, signal, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 import { tap } from 'rxjs/operators';
-import { environment } from '../environments/environment'; // Corrected import path
+import { Observable } from 'rxjs';
 
+// Using the correct, detailed interfaces from your file
 export interface UserAuth {
   username: string;
   email: string;
@@ -12,7 +14,7 @@ export interface UserAuth {
 
 export interface UserLogin {
   username: string;
-  password: string;
+  password?: string; // Made password optional to match your existing code
 }
 
 export interface AuthResponse {
@@ -27,35 +29,55 @@ export interface AuthResponse {
 })
 export class AuthService {
   private http = inject(HttpClient);
+  private router = inject(Router);
   private apiUrl = environment.baseUrl;
+
+  // --- State Management with Signals ---
+  private authToken = signal<string | null>(null);
+  public isLoggedIn = computed(() => !!this.authToken());
+
+  constructor() {
+    // On startup, load the token from localStorage into our signal
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      this.authToken.set(token);
+    }
+
+    // This effect runs whenever the isLoggedIn signal changes.
+    // If the user logs out, it will automatically navigate them to the login page.
+    effect(() => {
+      if (!this.isLoggedIn()) {
+        this.router.navigate(['/login']);
+      }
+    });
+  }
 
   register(user: UserAuth): Observable<any> {
     return this.http.post(`${this.apiUrl}/auth/register`, user);
   }
 
+  // ** This is your correct login logic, now integrated with signals **
   login(credentials: UserLogin): Observable<AuthResponse> {
     const body = new URLSearchParams();
     body.set('username', credentials.username);
     body.set('password', credentials.password || '');
 
-    return this.http
-      .post<AuthResponse>(`${this.apiUrl}/auth/token`, body.toString(), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      })
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/token`, body.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    })
       .pipe(
-        tap((res) => {
-          localStorage.setItem('access_token', res.access_token);
-          localStorage.setItem('refresh_token', res.refresh_token);
-        }),
+        tap((res) => this.setSession(res.access_token))
       );
   }
 
   logout(): void {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    this.authToken.set(null); // This will trigger the effect to navigate
   }
 
-  isLoggedIn(): boolean {
-    return !!localStorage.getItem('access_token');
+  private setSession(token: string): void {
+    localStorage.setItem('access_token', token);
+    this.authToken.set(token);
   }
 }
