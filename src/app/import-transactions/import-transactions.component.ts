@@ -21,7 +21,7 @@ interface PendingTransaction extends PendingTransactionPublic {
 @Component({
   selector: 'app-import-transactions',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe, AgGridAngular],
+  imports: [CommonModule, FormsModule, AgGridAngular],
   templateUrl: './import-transactions.component.html',
 })
 export class ImportTransactionsComponent implements OnInit {
