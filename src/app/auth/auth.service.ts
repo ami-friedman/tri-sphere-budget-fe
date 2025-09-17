@@ -1,7 +1,7 @@
 import { Injectable, computed, effect, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../environments/environment';
+import { environment } from '../../environments/environment';
 import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 

@@ -3,7 +3,8 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  baseUrl: 'https://tri-sphere-budget-be.onrender.com',
+  baseUrl: '/api',
+  production: true
 };
 
 /*

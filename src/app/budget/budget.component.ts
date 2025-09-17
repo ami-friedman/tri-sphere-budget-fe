@@ -6,7 +6,7 @@ import { Observable, BehaviorSubject, of, forkJoin, combineLatest } from 'rxjs';
 import { map, switchMap, startWith, catchError } from 'rxjs/operators';
 import { CategoryModalComponent } from './category-modal/category-modal.component';
 import { HttpErrorResponse, HttpClient } from '@angular/common/http';
-import { environment } from '../environments/environment';
+import { environment } from '../../environments/environment';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridOptions } from 'ag-grid-community';
 import { CategoryActionsRenderer } from './category-actions-renderer.component';
