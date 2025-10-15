@@ -33,6 +33,12 @@ export interface CategoryUpdate {
   is_active?: boolean;
 }
 
+export interface CategoryBudgetInfo {
+  budgeted_amount: number;
+  spent_amount: number;
+  remaining_amount: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -58,5 +64,11 @@ export class CategoryService {
 
   deleteCategory(id: string): Observable<Category> {
     return this.http.put<Category>(`${this.baseUrl}/categories/${id}`, { is_active: false });
+  }
+
+  getCategoryBudgetInfo(id: string, year: number, month: number): Observable<CategoryBudgetInfo> {
+    return this.http.get<CategoryBudgetInfo>(`${this.baseUrl}/categories/${id}/budget-info`, {
+      params: { year, month }
+    });
   }
 }

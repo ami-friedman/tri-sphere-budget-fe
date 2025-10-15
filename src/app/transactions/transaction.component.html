@@ -22,7 +22,7 @@
         </button>
       </div>
       <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-        <div class="md:col-span-2">
+        <div class="md:col-span-2 relative">
           <label class="block mb-2 text-sm font-medium">Category</label>
           <select formControlName="category_id" class="w-full py-2 px-3 rounded-lg bg-gray-700 border border-gray-600">
             <option [ngValue]="null" disabled>Select a Category</option>
@@ -30,6 +30,19 @@
               <option [value]="cat.id">{{ cat.name }}</option>
             }
           </select>
+          @if (categoryBudgetInfo$ | async; as budgetInfo) {
+            <div class="absolute top-full left-0 mt-2 text-sm text-gray-400 whitespace-nowrap">
+              @if ((activeTab$ | async) === 'income') {
+                <span>Budgeted: {{ budgetInfo.budgeted_amount | currency:'ILS' }}</span> |
+                <span>Actual: {{ budgetInfo.spent_amount | currency:'ILS' }}</span> |
+                <span [ngClass]="{'text-red-500': budgetInfo.remaining_amount < 0, 'text-green-500': budgetInfo.remaining_amount > 0}">Discrepancy: {{ budgetInfo.remaining_amount | currency:'ILS' }}</span>
+              } @else {
+                <span>Budgeted: {{ budgetInfo.budgeted_amount | currency:'ILS' }}</span> |
+                <span>Spent: {{ budgetInfo.spent_amount | currency:'ILS' }}</span> |
+                <span [ngClass]="{'text-red-500': budgetInfo.remaining_amount < 0, 'text-green-500': budgetInfo.remaining_amount > 0}">Remaining: {{ budgetInfo.remaining_amount | currency:'ILS' }}</span>
+              }
+            </div>
+          }
         </div>
         <div>
           <label class="block mb-2 text-sm font-medium">Amount (₪)</label>

@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { Observable, combineLatest, BehaviorSubject, of, forkJoin } from 'rxjs';
 import { map, startWith, switchMap } from 'rxjs/operators';
 import { TransactionService, TransactionWithCategory, TransactionCreate } from '../services/transaction.service';
-import { Category, CategoryService, CategoryType } from '../services/category.service';
+import {Category, CategoryBudgetInfo, CategoryService, CategoryType} from '../services/category.service';
 import { AccountService } from '../services/account.service';
 
 import { AgGridAngular } from 'ag-grid-angular';
@@ -35,6 +35,7 @@ export class TransactionComponent implements OnInit {
   allCategories: Category[] = [];
   filteredCategoriesForForm: Category[] = [];
   transactions$!: Observable<TransactionWithCategory[]>;
+  categoryBudgetInfo$: Observable<CategoryBudgetInfo | null> = of(null);
 
   colDefs: ColDef[] = [
     {
@@ -95,6 +96,21 @@ export class TransactionComponent implements OnInit {
       description: [''],
     });
     this.loadInitialData();
+    this.setupCategoryBudgetListener();
+  }
+
+  setupCategoryBudgetListener(): void {
+    this.categoryBudgetInfo$ = this.transactionForm.get('category_id')!.valueChanges.pipe(
+      startWith(this.transactionForm.get('category_id')!.value),
+      switchMap(categoryId => {
+        if (!categoryId) {
+          return of(null);
+        }
+        const year = this.selectedYear;
+        const month = this.monthNames.indexOf(this.selectedMonthName) + 1;
+        return this.categoryService.getCategoryBudgetInfo(categoryId, year, month);
+      })
+    );
   }
 
   loadInitialData(): void {
