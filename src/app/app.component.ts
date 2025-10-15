@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './app.component.html',
 })
 export class AppComponent {
-  title = 'tri-sphere-budget';
+  title = 'Budget Compass';
   isSidenavOpen = false;
 
   toggleSidenav() {
