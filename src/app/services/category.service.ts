@@ -17,6 +17,7 @@ export interface Category {
   type: CategoryType;
   budgeted_amount: number;
   created_at: string;
+  is_active: boolean;
 }
 
 export interface CategoryCreate {
@@ -29,6 +30,7 @@ export interface CategoryUpdate {
   name?: string;
   type?: CategoryType;
   budgeted_amount?: number;
+  is_active?: boolean;
 }
 
 @Injectable({
@@ -46,11 +48,15 @@ export class CategoryService {
     return this.http.post<Category>(`${this.baseUrl}/categories`, category);
   }
 
+  getAllCategories(): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.baseUrl}/categories/all`);
+  }
+
   updateCategory(id: string, category: CategoryUpdate): Observable<Category> {
     return this.http.put<Category>(`${this.baseUrl}/categories/${id}`, category);
   }
 
-  deleteCategory(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/categories/${id}`);
+  deleteCategory(id: string): Observable<Category> {
+    return this.http.put<Category>(`${this.baseUrl}/categories/${id}`, { is_active: false });
   }
 }

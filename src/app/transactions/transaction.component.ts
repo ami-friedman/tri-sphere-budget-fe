@@ -101,7 +101,7 @@ export class TransactionComponent implements OnInit {
     // ** SIMPLIFIED: No need to subscribe here, the grid will handle it **
     forkJoin({
       accounts: this.accountService.getAccounts(),
-      categories: this.categoryService.getCategories()
+      categories: this.categoryService.getAllCategories() // Use getAllCategories
     }).subscribe(({ accounts, categories }) => {
       this.allCategories = categories;
       const checkingAccount = accounts.find(a => a.type === 'Checking');
@@ -122,29 +122,6 @@ export class TransactionComponent implements OnInit {
     );
 
     this.transactions$ = combineLatest([allTransactions$, this.activeTab$]).pipe(
-      map(([transactions, activeTab]) => {
-        const categoryMap = new Map(this.allCategories.map(c => [c.id, c]));
-        return transactions
-          .map(t => ({ ...t, category: categoryMap.get(t.category_id) }))
-          .filter(t => t.category && t.category.type.toLowerCase() === activeTab) as TransactionWithCategory[];
-      })
-    );
-
-    this.activeTab$.subscribe(tab => this.updateFilteredCategoriesForForm(tab));
-  }
-
-  setupObservables(): void {
-    const allTransactions$ = this.refreshData$.pipe(
-      switchMap(params => {
-        if (!this.checkingAccountId) return of([]);
-        return this.transactionService.getTransactions(params.year, params.month, this.checkingAccountId);
-      })
-    );
-
-    this.transactions$ = combineLatest([
-      allTransactions$.pipe(startWith([])),
-      this.activeTab$
-    ]).pipe(
       map(([transactions, activeTab]) => {
         const categoryMap = new Map(this.allCategories.map(c => [c.id, c]));
         return transactions

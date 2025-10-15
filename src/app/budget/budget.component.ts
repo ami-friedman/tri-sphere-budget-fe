@@ -10,6 +10,8 @@ import { environment } from '../../environments/environment';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridOptions } from 'ag-grid-community';
 import { CategoryActionsRenderer } from './category-actions-renderer.component';
+import { BudgetApiService } from './data-access/budget-api.service';
+import { CategoryType } from '../services/category.service';
 
 interface BudgetSummary { income: number; monthly: number; cash: number; savings: number; }
 type BudgetTab = 'income' | 'cash' | 'monthly' | 'savings';
@@ -23,6 +25,7 @@ type BudgetTab = 'income' | 'cash' | 'monthly' | 'savings';
 export class BudgetComponent implements OnInit {
   // --- Services ---
   private categoryService = inject(CategoryService);
+  private budgetApiService = inject(BudgetApiService);
   private http = inject(HttpClient);
   private baseUrl = environment.baseUrl;
 
@@ -31,6 +34,8 @@ export class BudgetComponent implements OnInit {
   activeTab$ = new BehaviorSubject<BudgetTab>('income');
   isModalOpen: boolean = false;
   selectedCategoryForEdit: Category | null = null;
+  currentYear: number = new Date().getFullYear();
+  currentMonth: number = new Date().getMonth() + 1;
 
   // --- Data Observables ---
   private allData$!: Observable<{ categories: Category[], summary: BudgetSummary }>;
@@ -44,7 +49,13 @@ export class BudgetComponent implements OnInit {
     { headerName: 'Amount', field: 'budgeted_amount', sortable: true, filter: 'agNumberColumnFilter', valueFormatter: p => new CurrencyPipe('en-US', 'ILS').transform(p.value) || '', type: 'rightAligned', flex: 1 },
     { headerName: 'Actions', cellRenderer: CategoryActionsRenderer, colId: 'actions', flex: 1 }
   ];
-  gridOptions: GridOptions = { context: { componentParent: this } };
+  gridOptions: GridOptions = {
+    context: {
+      componentParent: this,
+      currentYear: this.currentYear,
+      currentMonth: this.currentMonth
+    }
+  };
 
   ngOnInit(): void {
     // ** THE FIX IS HERE: Refactored the observable pipeline **
@@ -68,7 +79,7 @@ export class BudgetComponent implements OnInit {
       this.activeTab$
     ]).pipe(
       map(([categories, activeTab]) =>
-        categories.filter(c => c.type.toLowerCase() === activeTab)
+        categories.filter(c => c.type.toLowerCase() === activeTab && c.is_active)
       )
     );
   }
@@ -90,7 +101,14 @@ export class BudgetComponent implements OnInit {
 
   onDeleteCategory(category: Category): void {
     if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
-      this.categoryService.deleteCategory(category.id).pipe(
+      let delete$: Observable<any>;
+      if (category.type === CategoryType.MONTHLY) {
+        delete$ = this.budgetApiService.deleteMonthlyBudget(category.id, this.currentYear, this.currentMonth);
+      } else {
+        delete$ = this.categoryService.deleteCategory(category.id);
+      }
+
+      delete$.pipe(
         catchError((err: HttpErrorResponse) => {
           alert(err.status === 409 ? err.error.detail : 'An unexpected error occurred.');
           return of(null);

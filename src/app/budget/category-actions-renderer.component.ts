@@ -13,9 +13,9 @@ import { ICellRendererParams } from 'ag-grid-community';
   `
 })
 export class CategoryActionsRenderer implements ICellRendererAngularComp {
-  private params!: ICellRendererParams;
+  private params!: ICellRendererParams & { context: { componentParent: any, currentYear: number, currentMonth: number } };
 
-  agInit(params: ICellRendererParams): void {
+  agInit(params: ICellRendererParams & { context: { componentParent: any, currentYear: number, currentMonth: number } }): void {
     this.params = params;
   }
 
@@ -28,6 +28,6 @@ export class CategoryActionsRenderer implements ICellRendererAngularComp {
   }
 
   onDeleteClick(): void {
-    this.params.context.componentParent.onDeleteCategory(this.params.data);
+    this.params.context.componentParent.onDeleteCategory(this.params.data, this.params.context.currentYear, this.params.context.currentMonth);
   }
 }
