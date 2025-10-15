@@ -6,22 +6,22 @@
         <div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-700">
           <ul class="flex flex-wrap -mb-px font-medium text-center text-sm">
             <li class="mr-2">
-              <button (click)="setActiveTab('income')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'income'}" class="inline-block p-3 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
+              <button (click)="setActiveTab('income')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'income'}" class="inline-block p-3 rounded-t-lg font-semibold border-transparent cursor-pointer">
                 Income
               </button>
             </li>
             <li class="mr-2">
-              <button (click)="setActiveTab('cash')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'cash'}" class="inline-block p-3 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
+              <button (click)="setActiveTab('cash')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'cash'}" class="inline-block p-3 rounded-t-lg font-semibold border-transparent cursor-pointer">
                 Cash
               </button>
             </li>
             <li class="mr-2">
-              <button (click)="setActiveTab('monthly')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'monthly'}" class="inline-block p-3 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
+              <button (click)="setActiveTab('monthly')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'monthly'}" class="inline-block p-3 rounded-t-lg font-semibold border-transparent cursor-pointer">
                 Monthly
               </button>
             </li>
             <li class="mr-2">
-              <button (click)="setActiveTab('savings')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'savings'}" class="inline-block p-3 rounded-t-lg font-semibold border-transparent hover:text-gray-300">
+              <button (click)="setActiveTab('savings')" [ngClass]="{'border-b-2 border-blue-500 text-blue-400': (activeTab$ | async) === 'savings'}" class="inline-block p-3 rounded-t-lg font-semibold border-transparent cursor-pointer">
                 Savings
               </button>
             </li>
